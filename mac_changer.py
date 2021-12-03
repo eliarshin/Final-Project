@@ -4,3 +4,4 @@ import subprocess
 
 output = subprocess.call("getmac", shell=True)
 print(output)
+print(output)
