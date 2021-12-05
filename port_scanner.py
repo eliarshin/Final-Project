@@ -1,22 +1,30 @@
 import socket
-import json
 import sys
+import json
 from rich.console import Console
 from rich.table import Table
 from art import *
+from threadpool import threadpool
+
+#Things to DO
+'1.Add Scanning Options for the Costumer'
+'2.Add Description and Help Functions for the customer'
+'3.Play with display fonts and make it good for the eye'
 
 console = Console()
-
 class port_scanner:
 
     PORTS_TO_SCAN = "./common_ports.json"
+    #
+    'Add advanced scan , and also choosing by user'
+    #
 
-    #Init our ps struct, including target, which ports are open, and the vulnerabilities
+    #Init of our struct
     def __init__(ps):
         ps.target = "" # The host we scan
         ps.open_ports = [] # collecting open ports
         ps.ports_vulnerability = {} # collecting vulnerability information
-    
+        
     #Extracting data from json file to our struct
     def read_from_json(ps):
         with open(port_scanner.PORTS_TO_SCAN, "r") as file:
@@ -24,13 +32,12 @@ class port_scanner:
         #print(data)
         ps.ports_vulnerability = {int(k): v for (k, v) in data.items()}
 
-    #Check every port that given with the host, if the connection succeeded, we append it on our struck of open ports
+    #trying connection with the target through the port , if theres an respond we get the opened port
     def port_scan(ps, port):
         #find the best time out to catch all the open ports
-        #AF_INET represent domain or IP ipv4 address , sock_stream is the default
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(1)
-        try: # we try to establish connection
+        try:
             conn_status = sock.connect_ex((ps.target, port))
             if conn_status == 0:
                 ps.open_ports.append(port)
@@ -38,9 +45,22 @@ class port_scanner:
         except:
             pass
 
-    #This is an static method that show us the entry message
-    #Explain the features we have
-    #I designed it with the libraries Art and Rich
+    #display the results on table
+    def display_results(ps):
+        print()
+        if ps.open_ports:
+            console.print("Scan Completed. Open Ports:", style="bold blue")
+            table = Table(show_header=True, header_style="bold green")
+            table.add_column("Released", justify="right", style="cyan", no_wrap=True)
+            table.add_column("Released", justify="right", style="cyan", no_wrap=True)
+            table.add_column("Released", justify="right", style="red", no_wrap=True)
+            for port in ps.open_ports:
+                table.add_row(str(port), "OPEN", ps.ports_vulnerability[port])
+            console.print(table)
+        else:
+            console.print(f"No Open Ports Found on Target", style="bold magenta")
+
+    #
     @staticmethod
     def entry_message():
         art_font = text2art("port scanner",font='cybermedium',chr_ignore=True)
@@ -56,7 +76,6 @@ class port_scanner:
         console.print("To choose range of ports to scan press - 3")
         console.print("To add your own JSON port file press - 4")
 
-    #this is an static method that give the IP address from URL
     @staticmethod
     def url_to_ip(target):
         try:
@@ -73,7 +92,14 @@ class port_scanner:
         target = console.input("[dim cyan]Enter target URL or IP address: ")
         num_of_workers = console.input("[dim cyan]Enter num of workers: ")
         ps.target = ps.url_to_ip(target)
-        ps.run() # we will create threadpool that we will send function and the ports to there
+  
+        ps.run()
+
+    def run(ps):
+        threadpool(ps.port_scan, ps.ports_vulnerability.keys(), len(ps.ports_vulnerability.keys()))
+        ps.display_results()
+        #print(len(ps.ports_vulnerability.keys()))
+
 
 if __name__ == "__main__":
     port_scan = port_scanner()
