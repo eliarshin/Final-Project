@@ -31,6 +31,7 @@ class port_scanner:
             data = json.load(file)
         #print(data)
         ps.ports_vulnerability = {int(k): v for (k, v) in data.items()}
+        #print(ps.ports_vulnerability)
 
     #trying connection with the target through the port , if theres an respond we get the opened port
     def port_scan(ps, port):
