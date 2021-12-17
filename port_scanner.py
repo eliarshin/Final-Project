@@ -28,6 +28,7 @@ class port_scanner:
         ps.open_ports = [] # collecting open ports
         ps.input_ports =[] #input from user
         ps.ports_vulnerability = {} # collecting vulnerability information
+        ps.recived_data = {}
         ps.state = "" # which state we are
         
     #Extracting data from json file to our struct
@@ -47,6 +48,9 @@ class port_scanner:
             conn_status = sock.connect_ex((ps.target, port))
             if conn_status == 0:
                 ps.open_ports.append(port)
+                #msg = sock.recv(4096) recived answer to dictionary
+                #ps.recived_data[port] = msg Recied data into dictionary
+
             sock.close()
         except:
             pass
@@ -62,9 +66,9 @@ class port_scanner:
         if ps.open_ports:
             console.print("Scan Completed. Open Ports:", style="bold blue")
             table = Table(show_header=True, header_style="bold green")
-            table.add_column("Released", justify="right", style="cyan", no_wrap=True)
-            table.add_column("Released", justify="right", style="cyan", no_wrap=True)
-            table.add_column("Released", justify="right", style="red", no_wrap=True)
+            table.add_column("PORT", justify="right", style="cyan", no_wrap=True)
+            table.add_column("STATUS", justify="right", style="cyan", no_wrap=True)
+            table.add_column("Vulnerability", justify="right", style="red", no_wrap=True)
             for port in ps.open_ports:
                 table.add_row(str(port), "OPEN", ps.ports_vulnerability[port])
             console.print(table)
@@ -115,6 +119,7 @@ class port_scanner:
             ps.target = ps.url_to_ip(target)
             ps.shuffle_ports()
             ps.run()
+            print(ps.recived_data)
         if ps.state == '3':
             target = console.input("[dim cyan]Enter target URL or IP address: ")
             ps.target = ps.url_to_ip(target)
