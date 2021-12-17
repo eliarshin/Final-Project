@@ -1,6 +1,9 @@
+import collections
 import socket
 import sys
 import json
+import random
+from typing import OrderedDict
 from rich.console import Console
 from rich.table import Table
 from art import *
@@ -23,7 +26,9 @@ class port_scanner:
     def __init__(ps):
         ps.target = "" # The host we scan
         ps.open_ports = [] # collecting open ports
+        ps.input_ports =[] #input from user
         ps.ports_vulnerability = {} # collecting vulnerability information
+        ps.state = "" # which state we are
         
     #Extracting data from json file to our struct
     def read_from_json(ps):
@@ -46,6 +51,11 @@ class port_scanner:
         except:
             pass
 
+    def user_range_ports(ps,x,y):
+        for i in range (int(x),int(y)):
+            ps.input_ports.append(i)
+        
+
     #display the results on table
     def display_results(ps):
         print()
@@ -61,6 +71,15 @@ class port_scanner:
         else:
             console.print(f"No Open Ports Found on Target", style="bold magenta")
 
+    def shuffle_ports(ps):
+        if ps.state == '2':
+            ("inside 3")
+            shuffling = list(ps.ports_vulnerability.items())
+            random.shuffle(shuffling)
+            ps.ports_vulnerability = collections.OrderedDict(shuffling)
+        if ps.state == '3':
+            random.shuffle(ps.input_ports)
+
     #
     @staticmethod
     def entry_message():
@@ -74,8 +93,8 @@ class port_scanner:
         console.print("[+]For help press - H")
         console.print("[+]For advanced scan (all ports) press - 1")
         console.print("[+]For built in scan press - 2")
-        console.print("To choose range of ports to scan press - 3")
-        console.print("To add your own JSON port file press - 4")
+        console.print("[+]To choose range of ports to scan press - 3")
+        console.print("[+]To add your own JSON port file press - 4")
 
     @staticmethod
     def url_to_ip(target):
@@ -89,12 +108,25 @@ class port_scanner:
 
     def init_main(ps):
         ps.entry_message()
-        ps.read_from_json()
-        target = console.input("[dim cyan]Enter target URL or IP address: ")
-        num_of_workers = console.input("[dim cyan]Enter num of workers: ")
-        ps.target = ps.url_to_ip(target)
-  
-        ps.run()
+        ps.state = console.input(" Enter your scan option: ")
+        if ps.state == '2':
+            ps.read_from_json()
+            target = console.input("[dim cyan]Enter target URL or IP address: ")
+            ps.target = ps.url_to_ip(target)
+            ps.shuffle_ports()
+            ps.run()
+        if ps.state == '3':
+            target = console.input("[dim cyan]Enter target URL or IP address: ")
+            ps.target = ps.url_to_ip(target)
+            lower = console.input("[dim cyan]Enter starting port: ")
+            higher = console.input("[dim cyan]Enter upper port: ")
+            ps.user_range_ports(lower,higher)
+            ps.shuffle_ports()
+            ps.run()
+
+        #num_of_workers = console.input("[dim cyan]Enter num of workers: ")
+        #print(ps.ports_vulnerability)
+        
 
     def run(ps):
         threadpool(ps.port_scan, ps.ports_vulnerability.keys(), len(ps.ports_vulnerability.keys()))
