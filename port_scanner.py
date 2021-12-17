@@ -104,6 +104,8 @@ class port_scanner:
     def url_to_ip(target):
         try:
             ip_addr = socket.gethostbyname(target)
+            check = socket.gethostbyaddr(ip_addr)
+            #print(check[0])
         except socket.gaierror as e:
             console.print(f"{e}. Exiting.", style="bold red")
             sys.exit()
@@ -119,7 +121,7 @@ class port_scanner:
             ps.target = ps.url_to_ip(target)
             ps.shuffle_ports()
             ps.run()
-            print(ps.recived_data)
+            #print(ps.recived_data)
         if ps.state == '3':
             target = console.input("[dim cyan]Enter target URL or IP address: ")
             ps.target = ps.url_to_ip(target)
