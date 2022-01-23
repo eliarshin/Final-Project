@@ -48,8 +48,9 @@ class port_scanner:
             conn_status = sock.connect_ex((ps.target, port))
             if conn_status == 0:
                 ps.open_ports.append(port)
-                #msg = sock.recv(4096) recived answer to dictionary
-                #ps.recived_data[port] = msg Recied data into dictionary
+                msg = sock.recv(4096) # recived answer to dictionary
+                ps.recived_data[port] = msg #Recied data into dictionary
+                #print(msg)
 
             sock.close()
         except:
@@ -63,7 +64,8 @@ class port_scanner:
     #display the results on table
     def display_results(ps):
         print()
-        if ps.open_ports:
+        
+        if ps.state=='2':
             console.print("Scan Completed. Open Ports:", style="bold blue")
             table = Table(show_header=True, header_style="bold green")
             table.add_column("PORT", justify="right", style="cyan", no_wrap=True)
@@ -71,9 +73,16 @@ class port_scanner:
             table.add_column("Vulnerability", justify="right", style="red", no_wrap=True)
             for port in ps.open_ports:
                 table.add_row(str(port), "OPEN", ps.ports_vulnerability[port])
-            console.print(table)
-        else:
-            console.print(f"No Open Ports Found on Target", style="bold magenta")
+
+        elif ps.state=='3':
+            console.print("Scan Completed. Open Ports:", style="bold blue")
+            table = Table(show_header=True, header_style="bold green")
+            table.add_column("PORT", justify="right", style="cyan", no_wrap=True)
+            table.add_column("STATUS", justify="right", style="cyan", no_wrap=True)
+            table.add_column("Vulnerability", justify="right", style="red", no_wrap=True)
+            for port in ps.open_ports: ## need to add database with the vulnerability of the ports
+                table.add_row(str(port), "OPEN", str(port))
+        console.print(table)
 
     def shuffle_ports(ps):
         if ps.state == '2':
@@ -121,7 +130,8 @@ class port_scanner:
             ps.target = ps.url_to_ip(target)
             ps.shuffle_ports()
             ps.run()
-            #print(ps.recived_data)
+            print((ps.recived_data))
+
         if ps.state == '3':
             target = console.input("[dim cyan]Enter target URL or IP address: ")
             ps.target = ps.url_to_ip(target)
@@ -136,8 +146,12 @@ class port_scanner:
         
 
     def run(ps):
-        threadpool(ps.port_scan, ps.ports_vulnerability.keys(), len(ps.ports_vulnerability.keys()))
-        ps.display_results()
+        if(ps.state == '2'):
+            threadpool(ps.port_scan, ps.ports_vulnerability.keys(), len(ps.ports_vulnerability.keys()))
+            ps.display_results()
+        if(ps.state == '3'):
+            threadpool(ps.port_scan, ps.input_ports, len(ps.input_ports))
+            ps.display_results()
         #print(len(ps.ports_vulnerability.keys()))
 
 
