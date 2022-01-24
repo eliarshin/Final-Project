@@ -58,14 +58,22 @@ class port_scanner:
 
     def user_range_ports(ps,x,y):
         for i in range (int(x),int(y)):
+            #print(i)
             ps.input_ports.append(i)
         
 
     #display the results on table
     def display_results(ps):
         print()
-        
-        if ps.state=='2':
+        if ps.state=='1':
+            console.print("Scan Completed. Open Ports:", style="bold blue")
+            table = Table(show_header=True, header_style="bold green")
+            table.add_column("PORT", justify="right", style="cyan", no_wrap=True)
+            table.add_column("STATUS", justify="right", style="cyan", no_wrap=True)
+            table.add_column("Vulnerability", justify="right", style="red", no_wrap=True)
+            for port in ps.open_ports: ## need to add database with the vulnerability of the ports
+                table.add_row(str(port), "OPEN", str(port))
+        elif ps.state=='2':
             console.print("Scan Completed. Open Ports:", style="bold blue")
             table = Table(show_header=True, header_style="bold green")
             table.add_column("PORT", justify="right", style="cyan", no_wrap=True)
@@ -85,6 +93,8 @@ class port_scanner:
         console.print(table)
 
     def shuffle_ports(ps):
+        if ps.state == '1':
+            random.shuffle(ps.input_ports)
         if ps.state == '2':
             ("inside 3")
             shuffling = list(ps.ports_vulnerability.items())
@@ -124,6 +134,14 @@ class port_scanner:
     def init_main(ps):
         ps.entry_message()
         ps.state = console.input(" Enter your scan option: ")
+
+        if ps.state == '1':
+            target = console.input("[dim cyan]Enter target URL or IP address: ")
+            ps.target = ps.url_to_ip(target)
+            ps.user_range_ports(2,65535)
+            ps.shuffle_ports()
+            ps.run()
+
         if ps.state == '2':
             ps.read_from_json()
             target = console.input("[dim cyan]Enter target URL or IP address: ")
@@ -141,17 +159,24 @@ class port_scanner:
             ps.shuffle_ports()
             ps.run()
 
-        #num_of_workers = console.input("[dim cyan]Enter num of workers: ")
-        #print(ps.ports_vulnerability)
+        if(ps.state == 'h' or ps.state == 'H'):
+            with open('help.txt') as f:
+                contents = f.read()
+                print(contents)
+                port_scan.init_main()
         
 
     def run(ps):
+        if(ps.state == '1'):
+            threadpool(ps.port_scan, ps.input_ports, len(ps.input_ports))
+            ps.display_results()
         if(ps.state == '2'):
             threadpool(ps.port_scan, ps.ports_vulnerability.keys(), len(ps.ports_vulnerability.keys()))
             ps.display_results()
         if(ps.state == '3'):
             threadpool(ps.port_scan, ps.input_ports, len(ps.input_ports))
             ps.display_results()
+
         #print(len(ps.ports_vulnerability.keys()))
 
 
