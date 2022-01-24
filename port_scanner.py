@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.table import Table
 from art import *
 from threadpool import threadpool
+import csv
 
 #Things to DO
 '1. Add method to scan bulk from user directory'
@@ -32,13 +33,24 @@ class port_scanner:
         ps.input_ports =[] #input from user
         ps.ports_vulnerability = {} # collecting vulnerability information
         ps.recived_data = {}
+        ps.db = ""
         ps.state = "" # which state we are
+
         
     #Extracting data from json file to our struct
     def read_from_json(ps):
         with open(port_scanner.PORTS_TO_SCAN, "r") as file: ## read and create dictionary
             data = json.load(file)
         ps.ports_vulnerability = {int(k): v for (k, v) in data.items()}
+
+
+    #work it
+    def read_from_db(ps):
+        f=open('./db.csv','r')
+        ps.db = csv.reader(f)
+        for row in ps.db:
+                print(row[3])
+
 
     #trying connection with the target through the port , if theres an respond we get the opened port
     def port_scan(ps, port):
@@ -137,7 +149,9 @@ class port_scanner:
     #main function - we choose here which option we choose
     def init_main(ps):
         ps.entry_message()
+        #ps.read_from_db()
         ps.state = console.input(" Enter your scan option: ")
+        
 
         if ps.state == '1':
             target = console.input("[dim cyan]Enter target URL or IP address: ")
