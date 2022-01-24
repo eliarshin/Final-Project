@@ -10,11 +10,14 @@ from art import *
 from threadpool import threadpool
 
 #Things to DO
-'1.Add Scanning Options for the Costumer'
-'2.Add Description and Help Functions for the customer'
-'3.Play with display fonts and make it good for the eye'
+'1. Add method to scan bulk from user directory'
+'2. Edit the help functions'
+'3. Find a database that giving information about open ports'
 
-console = Console()
+
+console = Console() ## for pretty write
+
+##the class
 class port_scanner:
 
     PORTS_TO_SCAN = "./common_ports.json"
@@ -33,11 +36,9 @@ class port_scanner:
         
     #Extracting data from json file to our struct
     def read_from_json(ps):
-        with open(port_scanner.PORTS_TO_SCAN, "r") as file:
+        with open(port_scanner.PORTS_TO_SCAN, "r") as file: ## read and create dictionary
             data = json.load(file)
-        #print(data)
         ps.ports_vulnerability = {int(k): v for (k, v) in data.items()}
-        #print(ps.ports_vulnerability)
 
     #trying connection with the target through the port , if theres an respond we get the opened port
     def port_scan(ps, port):
@@ -46,26 +47,25 @@ class port_scanner:
         sock.settimeout(1)
         try:
             conn_status = sock.connect_ex((ps.target, port))
-            if conn_status == 0:
+            if conn_status == 0: # if connection established
                 ps.open_ports.append(port)
                 msg = sock.recv(4096) # recived answer to dictionary
                 ps.recived_data[port] = msg #Recied data into dictionary
-                #print(msg)
-
             sock.close()
         except:
             pass
 
+    #input from user - using us for input from user + for advanced scan
     def user_range_ports(ps,x,y):
         for i in range (int(x),int(y)):
-            #print(i)
             ps.input_ports.append(i)
         
 
     #display the results on table
     def display_results(ps):
         print()
-        if ps.state=='1':
+
+        if ps.state=='1': # case one - advanced full scan
             console.print("Scan Completed. Open Ports:", style="bold blue")
             table = Table(show_header=True, header_style="bold green")
             table.add_column("PORT", justify="right", style="cyan", no_wrap=True)
@@ -73,7 +73,8 @@ class port_scanner:
             table.add_column("Vulnerability", justify="right", style="red", no_wrap=True)
             for port in ps.open_ports: ## need to add database with the vulnerability of the ports
                 table.add_row(str(port), "OPEN", str(port))
-        elif ps.state=='2':
+
+        elif ps.state=='2': # compresed scan - built in ports and information about them
             console.print("Scan Completed. Open Ports:", style="bold blue")
             table = Table(show_header=True, header_style="bold green")
             table.add_column("PORT", justify="right", style="cyan", no_wrap=True)
@@ -82,7 +83,7 @@ class port_scanner:
             for port in ps.open_ports:
                 table.add_row(str(port), "OPEN", ps.ports_vulnerability[port])
 
-        elif ps.state=='3':
+        elif ps.state=='3': # input ports from the user
             console.print("Scan Completed. Open Ports:", style="bold blue")
             table = Table(show_header=True, header_style="bold green")
             table.add_column("PORT", justify="right", style="cyan", no_wrap=True)
@@ -92,6 +93,7 @@ class port_scanner:
                 table.add_row(str(port), "OPEN", str(port))
         console.print(table)
 
+    #shuffle ports to not be detected as port scan
     def shuffle_ports(ps):
         if ps.state == '1':
             random.shuffle(ps.input_ports)
@@ -103,7 +105,7 @@ class port_scanner:
         if ps.state == '3':
             random.shuffle(ps.input_ports)
 
-    #
+    #static method that pop up our main screen
     @staticmethod
     def entry_message():
         art_font = text2art("port scanner",font='cybermedium',chr_ignore=True)
@@ -119,18 +121,20 @@ class port_scanner:
         console.print("[+]To choose range of ports to scan press - 3")
         console.print("[+]To add your own JSON port file press - 4")
 
+    #static method that gives us the IP address of the target
     @staticmethod
     def url_to_ip(target):
         try:
             ip_addr = socket.gethostbyname(target)
             check = socket.gethostbyaddr(ip_addr)
-            #print(check[0])
+            print(check[0])
         except socket.gaierror as e:
             console.print(f"{e}. Exiting.", style="bold red")
             sys.exit()
         console.print(f"\nIP The IP address of the url is: [bold blue]{ip_addr}[/bold blue]")
         return ip_addr
 
+    #main function - we choose here which option we choose
     def init_main(ps):
         ps.entry_message()
         ps.state = console.input(" Enter your scan option: ")
@@ -166,6 +170,7 @@ class port_scanner:
                 port_scan.init_main()
         
 
+    #this function run to us port_Scan function with threadpool
     def run(ps):
         if(ps.state == '1'):
             threadpool(ps.port_scan, ps.input_ports, len(ps.input_ports))
@@ -176,9 +181,6 @@ class port_scanner:
         if(ps.state == '3'):
             threadpool(ps.port_scan, ps.input_ports, len(ps.input_ports))
             ps.display_results()
-
-        #print(len(ps.ports_vulnerability.keys()))
-
 
 if __name__ == "__main__":
     port_scan = port_scanner()
