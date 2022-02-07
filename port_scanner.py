@@ -1,14 +1,17 @@
 import collections
+from pickle import TRUE
 import socket
+import string
 import sys
 import json
 import random
+#from turtle import pd
 from typing import OrderedDict
 from rich.console import Console
 from rich.table import Table
 from art import *
 from threadpool import threadpool
-import csv
+import pandas as pd
 
 #Things to DO
 '1. Add method to scan bulk from user directory'
@@ -35,6 +38,8 @@ class port_scanner:
         ps.recived_data = {}
         ps.db = ""
         ps.state = "" # which state we are
+        ps.service_name=[]
+        ps.description=[]
 
         
     #Extracting data from json file to our struct
@@ -46,10 +51,24 @@ class port_scanner:
 
     #work it
     def read_from_db(ps):
-        f=open('./db.csv','r')
-        ps.db = csv.reader(f)
-        for row in ps.db:
-                print(row[3])
+        ps.db = pd.read_csv('./db.csv')
+        ps.db = ps.db.drop_duplicates(subset=['Port Number'])
+        for port in ps.open_ports:
+            a = ps.db['Service Name'].where(ps.db['Port Number'] == str(port))
+            b = a.dropna()
+            d = ps.db['Description'].where(ps.db['Port Number'] == str(port))
+            c = d.dropna()
+            ps.service_name.append(b)
+            ps.description.append(c)
+
+        #print(ps.service_name)
+        #print(ps.description)
+
+                
+            
+    
+        
+                
 
 
     #trying connection with the target through the port , if theres an respond we get the opened port
@@ -76,7 +95,7 @@ class port_scanner:
     #display the results on table
     def display_results(ps):
         print()
-
+    
         if ps.state=='1': # case one - advanced full scan
             console.print("Scan Completed. Open Ports:", style="bold blue")
             table = Table(show_header=True, header_style="bold green")
@@ -94,6 +113,8 @@ class port_scanner:
             table.add_column("Vulnerability", justify="right", style="red", no_wrap=True)
             for port in ps.open_ports:
                 table.add_row(str(port), "OPEN", ps.ports_vulnerability[port])
+            
+            
 
         elif ps.state=='3': # input ports from the user
             console.print("Scan Completed. Open Ports:", style="bold blue")
@@ -101,8 +122,11 @@ class port_scanner:
             table.add_column("PORT", justify="right", style="cyan", no_wrap=True)
             table.add_column("STATUS", justify="right", style="cyan", no_wrap=True)
             table.add_column("Vulnerability", justify="right", style="red", no_wrap=True)
-            for port in ps.open_ports: ## need to add database with the vulnerability of the ports
-                table.add_row(str(port), "OPEN", str(port))
+            for port,serv in zip(ps.open_ports,ps.service_name): ## need to add database with the vulnerability of the ports
+                table.add_row(str(port), "OPEN",str(serv))
+ 
+                
+            
         console.print(table)
 
     #shuffle ports to not be detected as port scan
@@ -176,6 +200,7 @@ class port_scanner:
             ps.user_range_ports(lower,higher)
             ps.shuffle_ports()
             ps.run()
+            
 
         if(ps.state == 'h' or ps.state == 'H'):
             with open('help.txt') as f:
@@ -194,6 +219,7 @@ class port_scanner:
             ps.display_results()
         if(ps.state == '3'):
             threadpool(ps.port_scan, ps.input_ports, len(ps.input_ports))
+            ps.read_from_db()
             ps.display_results()
 
 if __name__ == "__main__":
