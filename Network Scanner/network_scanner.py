@@ -77,7 +77,7 @@ class network_scanner:
 
 
     def read_help(net):
-        with open('help.txt', encoding='utf8') as f:
+        with open('./Network Scanner/help.txt', encoding='utf8') as f:
             for line in f:
                 print(line.strip())
 
