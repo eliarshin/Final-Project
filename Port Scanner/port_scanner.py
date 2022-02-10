@@ -24,7 +24,7 @@ console = Console() ## for pretty write
 ##the class
 class port_scanner:
 
-    PORTS_TO_SCAN = "./common_ports.json"
+    PORTS_TO_SCAN = "./Port Scanner/common_ports.json"
     #
     'Add advanced scan , and also choosing by user'
     #
@@ -51,7 +51,7 @@ class port_scanner:
 
     #work it
     def read_from_db(ps):
-        ps.db = pd.read_csv('./db.csv')
+        ps.db = pd.read_csv('./Port Scanner/db.csv')
         ps.db = ps.db.drop_duplicates(subset=['Port Number'])
         for port in ps.open_ports:
             a = ps.db['Service Name'].where(ps.db['Port Number'] == str(port))
@@ -203,7 +203,7 @@ class port_scanner:
             
 
         if(ps.state == 'h' or ps.state == 'H'):
-            with open('help.txt') as f:
+            with open('./Port Scanner/help.txt') as f:
                 contents = f.read()
                 print(contents)
                 port_scan.init_main()
