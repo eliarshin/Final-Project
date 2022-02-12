@@ -1,3 +1,4 @@
+
 from io import StringIO
 from bs4 import BeautifulSoup
 import requests
@@ -35,24 +36,31 @@ class web_crawler:
         for u in crawl.found_subdomains:
             print("[+]URL - " + u)
     
-    def find_directories(crawl):
-        get_site = requests.get(crawl.target)
-        soup = BeautifulSoup(get_site.text,"lxml")
+    def find_directories_current_page(crawl):
+        response = requests.get(crawl.target)
+        soup = BeautifulSoup(response.text,"html.parser")
+        for link in soup.find_all("a"):
+            data = link.get("href")
+            crawl.urls.append(data)
+            print(data)
 
-        for i in soup.find_all("a"):
-            href = i.attrs['href']
-            if href.startswith("/"):
-                crawl.target = crawl.target + href
-                if crawl.target not in crawl.urls:
-                    crawl.urls.append(crawl.target) 
-                    print(crawl.target)
-                    crawl.find_directories()
+        # get_site = requests.get(crawl.target)
+        # soup = BeautifulSoup(get_site.text,"lxml")
+
+        # for i in soup.find_all("a"):
+        #     href = i.attrs['href']
+        #     if href.startswith("/"):
+        #         crawl.target = crawl.target + href
+        #         if crawl.target not in crawl.urls:
+        #             crawl.urls.append(crawl.target) 
+        #             print(crawl.target)
+        #             crawl.find_directories_current_page()
 
     
     def get_started(crawl):
         crawl.get_target()
         #crawl.find_subdomains()
-        crawl.find_directories()
+        crawl.find_directories_current_page()
 
 
 if __name__ == "__main__":
