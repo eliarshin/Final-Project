@@ -1,12 +1,18 @@
 
 from io import StringIO
 from bs4 import BeautifulSoup
+from pkg_resources import find_distributions
 import requests
 import re
 from urllib.parse import urlparse
 from urllib.parse import urljoin
+from rich.console import Console
+from art import *
+from rich.table import Table
 
+console = Console()
 class web_crawler:
+
     def __init__(crawl):
         crawl.target = ""
         crawl.found_subdomains = []
@@ -14,6 +20,7 @@ class web_crawler:
         crawl.copy_subdomain_list = ""
         crawl.subdomain_list_content = ""
         crawl.urls = []
+        crawl.state = ""
 
     def parse_data(crawl):
         crawl.copy_subdomain_list = crawl.subdomain_list.read()
@@ -21,7 +28,22 @@ class web_crawler:
 
     def get_target(crawl):
         crawl.target = input("Enter your target :")
-    
+
+    @staticmethod
+    def entry_message():
+        art_font = text2art("Web Crawler",font='cybermedium',chr_ignore=True)
+        console.print(f"[bold red]{art_font}[/bold red]")
+        console.print("#" * 55, style="bold green")
+        console.print("#"*12,"Web crawler", "#"*12,style="dim cyan")
+        console.print("#"*11,"A Wide Range of Crawling Options", "#"*11,style="dim cyan")
+        console.print("#" * 55, style="bold green")
+        print()
+        console.print("[+]For help press - H")
+        console.print("[+]For Subdomains scan - 1")
+        console.print("[+]For page directories scan - 2")
+        console.print("[+]For recursive directories scan - 3")
+        console.print("[+]Import your own subdomains list - 4")
+
     def find_subdomains(crawl):
         crawl.parse_data()
         for subdomain in crawl.subdomain_list_content:
@@ -44,6 +66,18 @@ class web_crawler:
             crawl.urls.append(data)
             print(data)
 
+    def init_main(crawl):
+        crawl.entry_message()
+        crawl.state = input("Please enter you crawl option :")
+        crawl.get_target()
+        
+        if crawl.state == '1':
+            crawl.find_subdomains()
+        elif crawl.state == '2':
+            crawl.find_directories_current_page()
+
+
+
         # get_site = requests.get(crawl.target)
         # soup = BeautifulSoup(get_site.text,"lxml")
 
@@ -65,7 +99,7 @@ class web_crawler:
 
 if __name__ == "__main__":
     network_scan = web_crawler()
-    network_scan.get_started()
+    network_scan.init_main()
 
 # url = "ynet.co.il"
 
