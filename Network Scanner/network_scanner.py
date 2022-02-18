@@ -7,7 +7,6 @@ from rich.console import Console
 from rich.table import Table
 from art import *
 import scapy.all as scapy
-from nmap import PortScanner
 import socket
 
 #TO DO#
