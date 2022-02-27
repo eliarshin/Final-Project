@@ -26,7 +26,7 @@ class network_scanner:
         net.clients_dict = []
     
     def get_target(net):
-        net.target = "192.168.1.72/24"
+        net.target = "192.168.1.172/24"
 
     
     
@@ -72,9 +72,17 @@ class network_scanner:
             net.scan()
             net.results()
 
-        if(net.state == 'H' or net.state == 'h'):
+        elif(net.state == 'H' or net.state == 'h'):
             net.read_help()
-
+        
+        elif(net.state == '3'):
+            net.target = input("Please enter your target with the following build : 00.00.00.00/subset")
+            net.get_target()
+            net.scan()
+            net.results()
+        else:
+            print("Bad input - Please choose from the menu")
+            net.init_main()
 
     def read_help(net):
         with open('./Network Scanner/help.txt', encoding='utf8') as f:

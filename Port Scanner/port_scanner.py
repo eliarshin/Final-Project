@@ -12,6 +12,13 @@ from rich.table import Table
 from art import *
 from threadpool import threadpool
 import pandas as pd
+import time
+import sys
+import socket
+from tkinter import *
+from datetime import datetime
+import os
+
 
 #Things to DO
 '1. Add method to scan bulk from user directory'
@@ -28,9 +35,17 @@ class port_scanner:
     #
     'Add advanced scan , and also choosing by user'
     #
-
+    
     #Init of our struct
     def __init__(ps):
+        ################## HERE TESTTTTTTTTTTTTTTTTTTTT ##########@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        ps.root = Tk()
+        ps.btn1 = Button(ps.root, text="Built in portscan", command=ps.pinger)
+        ps.txt1 =Text(ps.root, width=60)
+        ps.lbl1=Label(ps.root, text="Insert IP or Domain >>")
+        ps.ent =Entry(ps.root, width=20)
+        ################## HERE TESTTTTTTTTTTTTTTTTTTTT ##########@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
         ps.target = "" # The host we scan
         ps.open_ports = [] # collecting open ports
         ps.input_ports =[] #input from user
@@ -41,7 +56,7 @@ class port_scanner:
         ps.service_name=[]
         ps.description=[]
 
-        
+    
     #Extracting data from json file to our struct
     def read_from_json(ps):
         with open(port_scanner.PORTS_TO_SCAN, "r") as file: ## read and create dictionary
@@ -66,7 +81,22 @@ class port_scanner:
 
                 
             
-    
+    def create_screen(ps):
+        ps.root.title('PT Framework')
+        ps.root.geometry("500x500")
+        ps.root.resizable(False, False)
+        m1c = '#00ee00'
+        bgc = '#222222'
+        dbg = '#000000'
+        fgc = '#111111'
+        ps.root.tk_setPalette(background=bgc, foreground=m1c, activeBackground=fgc, activeForeground=bgc, highlightColor=m1c,
+                   highlightBackground=m1c)
+        ps.btn1.place(x=420, y=15)
+        ps.txt1.place(x=4, y=100)
+        ps.lbl1.place(x=2, y=20)
+        ps.ent.place(x=150, y=20)
+        
+        #test = port_scanner.get_data(port_scan)   
         
                 
 
@@ -113,9 +143,9 @@ class port_scanner:
             table.add_column("Vulnerability", justify="right", style="red", no_wrap=True)
             for port in ps.open_ports:
                 table.add_row(str(port), "OPEN", ps.ports_vulnerability[port])
-            
-            
+                #ps.txt1.insert(END,ps.ports_vulnerability[port]) ################## HERE TESTTTTTTTTTTTTTTTTTTTT ##########@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
+            
         elif ps.state=='3': # input ports from the user
             console.print("Scan Completed. Open Ports:", style="bold blue")
             table = Table(show_header=True, header_style="bold green")
@@ -174,9 +204,8 @@ class port_scanner:
     def init_main(ps):
         ps.entry_message()
         #ps.read_from_db()
+        #ps.create_screen()################## HERE TESTTTTTTTTTTTTTTTTTTTT ##########@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         ps.state = console.input(" Enter your scan option: ")
-        
-
         if ps.state == '1':
             target = console.input("[dim cyan]Enter target URL or IP address: ")
             ps.target = ps.url_to_ip(target)
@@ -206,22 +235,82 @@ class port_scanner:
             with open('./Port Scanner/help.txt') as f:
                 contents = f.read()
                 print(contents)
-                port_scan.init_main()
+                ps.init_main()
+    
+    ################## HERE TESTTTTTTTTTTTTTTTTTTTT ##########@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    def pinger(ps):
+        ps.create_screen()
+        ps.target = ps.url_to_ip(ps.ent.get())
+        ps.shuffle_ports()
+        ps.state==2
+        ps.run()
+    ################## HERE TESTTTTTTTTTTTTTTTTTTTT ##########@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    # def get_data(ps):
+    #     return ps.recived_data
+            
         
 
     #this function run to us port_Scan function with threadpool
     def run(ps):
-        if(ps.state == '1'):
-            threadpool(ps.port_scan, ps.input_ports, len(ps.input_ports))
-            ps.display_results()
-        if(ps.state == '2'):
+         if(ps.state == '1'):
+             threadpool(ps.port_scan, ps.input_ports, len(ps.input_ports))
+             ps.display_results()
+         if(ps.state == '2'):
             threadpool(ps.port_scan, ps.ports_vulnerability.keys(), len(ps.ports_vulnerability.keys()))
             ps.display_results()
-        if(ps.state == '3'):
-            threadpool(ps.port_scan, ps.input_ports, len(ps.input_ports))
-            ps.read_from_db()
-            ps.display_results()
+         if(ps.state == '3'):
+             threadpool(ps.port_scan, ps.input_ports, len(ps.input_ports))
+             ps.read_from_db()
+             ps.display_results()
+
+# class Gui:
+
+#     PORTS_TO_SCAN = "./Port Scanner/common_ports.json"
+    
+    # def __init__(gui): 
+    #     gui.root = Tk()
+    #     gui.btn1 = Button(gui.root, text="Built in portscan", command=port_scanner.pinger(port_scan))
+    #     gui.txt1 =Text(gui.root, width=60)
+    #     gui.lbl1=Label(gui.root, text="Insert IP or Domain >>")
+    #     port_scanner.target =Entry(gui.root, width=20)
+
+    # def create_screen(gui):
+    #     gui.root.title('PT Framework')
+    #     gui.root.geometry("500x500")
+    #     gui.root.resizable(False, False)
+    #     m1c = '#00ee00'
+    #     bgc = '#222222'
+    #     dbg = '#000000'
+    #     fgc = '#111111'
+    #     gui.root.tk_setPalette(background=bgc, foreground=m1c, activeBackground=fgc, activeForeground=bgc, highlightColor=m1c,
+    #                highlightBackground=m1c)
+    #     gui.btn1.place(x=420, y=15)
+    #     gui.txt1.place(x=4, y=100)
+    #     gui.lbl1.place(x=2, y=20)
+    #     port_scanner.target.place(x=150, y=20)
+    #     #test = port_scanner.get_data(port_scan)
+#         #print("here data = ",test)
+#         gui.txt1.insert(port_scanner.get_data(port_scan))
+
+#         def url_to_ip(target):
+#             try:
+#                 ip_addr = socket.gethostbyname(target)
+#                 check = socket.gethostbyaddr(ip_addr)
+#                 print(check[0])
+#             except socket.gaierror as e:
+#                 console.print(f"{e}. Exiting.", style="bold red")
+#                 sys.exit()
+#             console.print(f"\nIP The IP address of the url is: [bold blue]{ip_addr}[/bold blue]")
+#             return ip_addr
+        
+#         def run(gui):
+#             threadpool(gui.port_scan, gui.ports_vulnerability.keys(), len(gui.ports_vulnerability.keys()))
+
+
 
 if __name__ == "__main__":
+    # gui = Gui()
+    # gui.create_screen()
     port_scan = port_scanner()
     port_scan.init_main()
+    port_scan.root.mainloop()
