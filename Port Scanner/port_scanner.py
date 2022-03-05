@@ -7,11 +7,13 @@ import json
 import random
 #from turtle import pd
 from typing import OrderedDict
+from numpy import False_
 from rich.console import Console
 from rich.table import Table
 from art import *
 from threadpool import threadpool
 import pandas as pd
+import openpyxl
 
 #Things to DO
 '1. Add method to scan bulk from user directory'
@@ -45,13 +47,20 @@ class port_scanner:
     def export_results(ps):
         ports =[]
         desc = []
+        informative = pd.read_excel('./Port Scanner/Informative.xlsx')
+        #informative.dropna(inplace=True)
+        #print(informative.head)
+
         for port in ps.open_ports:
+            a = informative['Info'].where(informative['Port'] == (port))
+            b = a.dropna()
+            print(" b ==",str(b))
             ports.append(str(port))
-            desc.append(ps.ports_vulnerability[port])
+            desc.append(str(b))
 
         keys = ['port','description']
         zip_ports_desc = zip(ports,desc)
-        #zipped_all=dict(zip(keys,zip_ports_desc))    
+        # zipped_all=dict(zip(keys,zip_ports_desc))    
         #ps.export.append(ports,desc)
         df = pd.DataFrame(columns=['port', 'description'],data=zip_ports_desc)
         df.to_csv('results.csv')
