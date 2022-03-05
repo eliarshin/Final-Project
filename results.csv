@@ -1,5 +1,5 @@
 ,port,description
-0,443,"7    Used by HTTP and HTTPS. HTTP servers and their...
+0,80,"6    Used by HTTP and HTTPS. HTTP servers and their various components are very exposed and often sources of attacks.
 Name: Info, dtype: object"
-1,80,"6    Used by HTTP and HTTPS. HTTP servers and their...
+1,443,"7    Used by HTTP and HTTPS. HTTP servers and their various components are very exposed and often sources of attacks.
 Name: Info, dtype: object"

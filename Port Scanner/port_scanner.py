@@ -48,6 +48,7 @@ class port_scanner:
         ports =[]
         desc = []
         informative = pd.read_excel('./Port Scanner/Informative.xlsx')
+        pd.set_option('display.max_colwidth', -1)
         #informative.dropna(inplace=True)
         #print(informative.head)
 
@@ -57,12 +58,13 @@ class port_scanner:
             #print(" b ==",str(b))
             ports.append(str(port))
             desc.append(str(b))
-
         keys = ['port','description']
         zip_ports_desc = zip(ports,desc)
         # zipped_all=dict(zip(keys,zip_ports_desc))    
         #ps.export.append(ports,desc)
         df = pd.DataFrame(columns=['port', 'description'],data=zip_ports_desc)
+        
+        print(df)
         df.to_csv('results.csv')
         
 
