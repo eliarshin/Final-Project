@@ -54,7 +54,7 @@ class port_scanner:
         for port in ps.open_ports:
             a = informative['Info'].where(informative['Port'] == (port))
             b = a.dropna()
-            print(" b ==",str(b))
+            #print(" b ==",str(b))
             ports.append(str(port))
             desc.append(str(b))
 
@@ -84,15 +84,6 @@ class port_scanner:
             c = d.dropna()
             ps.service_name.append(b)
             ps.description.append(c)
-
-        #print(ps.service_name)
-        #print(ps.description)
-
-                
-            
-    
-        
-                
 
 
     #trying connection with the target through the port , if theres an respond we get the opened port
