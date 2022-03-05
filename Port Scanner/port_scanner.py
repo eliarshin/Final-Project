@@ -40,8 +40,23 @@ class port_scanner:
         ps.state = "" # which state we are
         ps.service_name=[]
         ps.description=[]
+        ps.export = [] # export it
 
+    def export_results(ps):
+        ports =[]
+        desc = []
+        for port in ps.open_ports:
+            ports.append(str(port))
+            desc.append(ps.ports_vulnerability[port])
+
+        keys = ['port','description']
+        zip_ports_desc = zip(ports,desc)
+        #zipped_all=dict(zip(keys,zip_ports_desc))    
+        #ps.export.append(ports,desc)
+        df = pd.DataFrame(columns=['port', 'description'],data=zip_ports_desc)
+        df.to_csv('results.csv')
         
+
     #Extracting data from json file to our struct
     def read_from_json(ps):
         with open(port_scanner.PORTS_TO_SCAN, "r") as file: ## read and create dictionary
@@ -190,6 +205,7 @@ class port_scanner:
             ps.target = ps.url_to_ip(target)
             ps.shuffle_ports()
             ps.run()
+            ps.export_results()
             print((ps.recived_data))
 
         if ps.state == '3':
