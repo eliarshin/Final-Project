@@ -9,6 +9,7 @@ from art import *
 import scapy.all as scapy
 from nmap import PortScanner
 import socket
+import pandas as pd
 
 #TO DO#
 'Create Constructor'
@@ -29,7 +30,18 @@ class network_scanner:
         net.target = "192.168.1.72/24"
 
     
-    
+    def export_results(net):
+        ip =[]
+        mac =[]
+        for e in net.clients_list:
+           ip.append(str(e["ip"]))
+           mac.append(str(e["mac"])) 
+        keys = ["IP","MAC"]
+        zip_ip_mac = zip(ip,mac)
+        df = pd.DataFrame(columns=['IP', 'MAC'],data=zip_ip_mac)
+        df.to_csv('results_net.csv')
+
+
     def scan(net):
         arp_request = scapy.ARP(pdst=net.target)
         broadcast = scapy.Ether(dst="ff:ff:ff:ff:ff:ff")
@@ -47,6 +59,7 @@ class network_scanner:
             for devices in net.clients_list:
                 table.add_row(str(devices["ip"]),str(devices["mac"]))
             console.print(table)
+            net.export_results()
 
     @staticmethod
     def entry_message():
