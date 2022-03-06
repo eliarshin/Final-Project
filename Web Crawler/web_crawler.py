@@ -9,6 +9,7 @@ from urllib.parse import urljoin
 from rich.console import Console
 from art import *
 from rich.table import Table
+import pandas as pd
 
 console = Console()
 class web_crawler:
@@ -43,6 +44,10 @@ class web_crawler:
         console.print("[+]For page directories scan - 2")
         console.print("[+]For recursive directories scan - 3")
         console.print("[+]Import your own subdomains list - 4")
+    
+    def export_information(crawl):
+        df = pd.DataFrame(columns=['url'],data=crawl.urls)
+        df.to_csv('results_urls.csv')
 
     def find_subdomains(crawl):
         crawl.parse_data()
@@ -75,6 +80,7 @@ class web_crawler:
             crawl.find_subdomains()
         elif crawl.state == '2':
             crawl.find_directories_current_page()
+            crawl.export_information()
 
 
 
