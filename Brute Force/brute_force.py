@@ -102,6 +102,7 @@ class brute_force:
                 #print("thread = ", t)
                 time.sleep(0.5)
         
+    #posting
     def post(bf):
         print("Please enter target")
         bf.target = input()
