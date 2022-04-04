@@ -7,7 +7,6 @@ from rich.console import Console
 from rich.table import Table
 from art import *
 import scapy.all as scapy
-from nmap import PortScanner
 import socket
 import pandas as pd
 
@@ -27,7 +26,7 @@ class network_scanner:
         net.clients_dict = []
     
     def get_target(net):
-        net.target = "192.168.1.72/24"
+        net.target = "192.168.0.102/24"
 
     
     def export_results(net):
