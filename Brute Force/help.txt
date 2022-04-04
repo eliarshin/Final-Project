@@ -1,0 +1,26 @@
+In cryptography, a brute-force attack consists of an attacker submitting many passwords or passphrases with the hope of eventually guessing correctly.
+The attacker systematically checks all possible passwords and passphrases until the correct one is found. 
+Alternatively, the attacker can attempt to guess the key which is typically created from the password using a key derivation function. 
+This is known as an exhaustive key search.
+
+Our Brute Force application will focus on three methodologies : FTP / SSH / HTTP
+HTTP:
+This function will recieve URL from the user.
+The URL is must to be a LOGIN PAGE of the website we want to brute force.
+After the user will enter the LOGIN PAGE that he want to brute force, our application
+will run by threaded method a lot of login attempt to this website with our passwords list.
+Once will be successfull login - the user will recieve the username and the password that made the connection.
+
+FTP:
+This function will recieve and FTP address from the user.
+The address must be a FTP address otherwise the user will get an error.
+After the user will enter the FTP address, our application will start multiple
+threads that will try to connect to the service through FTP login.
+Once will be successfull login the user will recieve the username and the password that made the connection.
+
+SSH:
+This function will recieve SSH address from the user.
+The address must be related to SSH machine or service that support SSH.
+Once the user gave legit address the application will start threaded SSH connection to the machine.
+If will be successfull connection to the machine - the user will recieve the username and the password.
+

