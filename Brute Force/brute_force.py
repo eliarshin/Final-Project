@@ -105,6 +105,7 @@ class brute_force:
                     t.join()
                     exit()
                 bf.single_password = line.strip()
+                #print("pw is + ",bf.single_password)
                 t=threading.Thread(target=bf.ssh_connect(), args=(bf.single_password,)) # objeto thread
                 t.start()
                 #print("thread = ", t)
@@ -152,12 +153,20 @@ class brute_force:
             console.print("Please enter username to check with(reccomendated - 'admin') :")
             bf.username = input()
             bf.post()
+        elif(bf.state == 'i' or bf.state == 'I'):
+            console.print("Please enter full *path* of the passwords text:")
+            bf.passwords_bulk = input()
+            console.print("Press 'b' to back to the menu")
+            bf.state = input()
+            if(bf.state == 'b' or bf.state == 'B'):
+                bf.init_main()
+
 
 
         #bf.read_help()
-        bf.username = "admin"
-        bf.target = "http://www.ynet.co.il"
-        bf.ssh_thread()
+        #bf.username = "admin"
+        #bf.target = "http://www.ynet.co.il"
+        #bf.ssh_thread()
 
 if __name__ == "__main__":
     network_scan = brute_force()
