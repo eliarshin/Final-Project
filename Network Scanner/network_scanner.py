@@ -9,7 +9,8 @@ from art import *
 import scapy.all as scapy
 import socket
 import pandas as pd
-
+import os
+import netifaces
 #TO DO#
 'Create Constructor'
 'Input from user'
@@ -25,8 +26,11 @@ class network_scanner:
         net.clients_list = []
         net.clients_dict = []
     
-    def get_target(net):
-        net.target = "192.168.0.102/24"
+    def get_self_target(net):
+        gateways = netifaces.gateways()
+        default_gateway = gateways['default'][netifaces.AF_INET][0]
+        default_gateway = default_gateway + "/24"
+        net.target = default_gateway
 
     
     def export_results(net):
@@ -80,7 +84,8 @@ class network_scanner:
         net.state = console.input("Enter your option")
 
         if(net.state == '1'):
-            net.get_target()
+            #print(default_gateway)
+            net.get_self_target()
             net.scan()
             net.results()
 
