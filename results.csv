@@ -1,8 +1,3 @@
 ,port,description
-0,8080,"Series([], Name: Info, dtype: object)"
-1,143,"Series([], Name: Info, dtype: object)"
-2,443,"7    Used by HTTP and HTTPS. HTTP servers and their various components are very exposed and often sources of attacks.
-Name: Info, dtype: object"
-3,80,"6    Used by HTTP and HTTPS. HTTP servers and their various components are very exposed and often sources of attacks.
-Name: Info, dtype: object"
-4,5060,"Series([], Name: Info, dtype: object)"
+0,993,"Series([], Name: Info, dtype: object)"
+1,465,"Series([], Name: Info, dtype: object)"

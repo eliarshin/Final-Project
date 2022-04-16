@@ -71,7 +71,7 @@ class tracker:
             tracker.create_api_request(tracker)
             tracker.parse_json(tracker)
             print(tracker.create_json)
-            tracker.json_to_csv(tracker)
+            #tracker.json_to_csv(tracker)
 
 if __name__ == "__main__":
     track = tracker()
