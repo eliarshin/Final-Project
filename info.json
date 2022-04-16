@@ -1,0 +1,16 @@
+{
+      "status": "success",
+      "country": "United Kingdom",
+      "countryCode": "GB",
+      "region": "ENG",
+      "regionName": "England",
+      "city": "London",
+      "zip": "W1B",
+      "lat": 51.5074,
+      "lon": -0.127758,
+      "timezone": "Europe/London",
+      "isp": "Google LLC",
+      "org": "Google LLC",
+      "as": "AS15169 Google LLC",
+      "query": "172.217.169.78"
+}

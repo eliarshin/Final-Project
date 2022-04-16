@@ -8,7 +8,11 @@ import requests
 import ftplib
 from threading import Thread
 import queue
+import pandas as pd
 
+
+###TASKS###
+#Export results
 console=Console()
 stop_flag=0
 
@@ -39,6 +43,7 @@ class brute_force:
         bf.stop_flag = 0
         bf.passwords_bulk = "./Brute Force/passwords.txt"
         bf.single_password = ""
+        bf.working_password = ""
         bf.code = 0
         bf.state = ""
 
@@ -87,6 +92,7 @@ class brute_force:
             ssh.connect(bf.target,port=22, username=bf.username, password=bf.single_password)
             stop_flag = 1
             console.print('[+] Found password: @@@@@@@@@@@@@@@@@@@@' + bf.single_password + ' , for account: ' + bf.username)
+            bf.working_password = bf.single_password
         except: # If the password not correct we move forward to the next one and close connection
             console.print( '[-] Incorrect login, the password doesn\'t match: ' + bf.single_password)
         ssh.close()
@@ -133,6 +139,7 @@ class brute_force:
                #print(response.content)
                 if "Login failed" not in str(response.content):
                     print("[+] Password found --->" + bf.single_password)
+                    bf.working_password = bf.single_password
 
     def connect_ftp(bf):
         while True:
@@ -152,9 +159,10 @@ class brute_force:
             else:
                 # correct credentials
                 print(f"[+] Found credentials: ")
-                print(f"\tHost: ")
-                print(f"\tUser:")
+                print(f"\tHost: {bf.target}")
+                print(f"\tUser: {bf.username}")
                 print(f"\tPassword: {password}")
+                bf.working_password = password
                 # we found the password, let's clear the queue
                 with bf.q.mutex:
                     bf.q.queue.clear()
@@ -163,6 +171,7 @@ class brute_force:
             finally:
                 # notify the queue that the task is completed for this password
                 bf.q.task_done()
+
 
     def thread_ftp(bf):
         passwords = open("Brute Force\passwords.txt").read().split("\n")
