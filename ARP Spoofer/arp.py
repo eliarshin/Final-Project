@@ -8,7 +8,7 @@ from rich.console import Console
 from rich.table import Table
 from art import *
 
-
+console = Console()
 #WORK ONLY ON LINUX#
 '''
 This code is represnting ARP spoofer
@@ -18,7 +18,31 @@ one IP address with another
 '''
 
 class arp_spoofing:
+    def __init__(arpspf):
+        arpspf.state = ""
 
+    @staticmethod
+    def entry_message():
+        '''
+        Entry message with logo and menu
+        The user will choose the current option that he want
+        to perform his brute force
+        In addition he can also import passwords list by himself
+        or check for information by pressing H
+        We MAKE PRETTY LOGO ASWELL
+        '''
+        art_font = text2art("Tracker",font='cybermedium',chr_ignore=True)
+        console.print(f"[bold red]{art_font}[/bold red]")
+        console.print("#" * 55, style="bold green")
+        console.print("#"*12,"ARP Spoofer", "#"*12,style="dim cyan")
+        console.print("#"*11,"Spoof an device that", "#"*11,style="dim cyan")
+        console.print("#"*11,"is on the same network as yours", "#"*11,style="dim cyan")
+        console.print("")
+        console.print("#" * 55, style="bold green")
+        print()
+        console.print("[+]For help press - H")
+        console.print("[+]For spoofing - 1")
+  
     @staticmethod
     def get_mac(ip):
         '''
@@ -50,17 +74,30 @@ class arp_spoofing:
     @staticmethod
     def while_spoof_loop(target_ip,spoof_ip):
         while True:
-            arp.spoof(target_ip = target_ip , spoof_ip = spoof_ip)
+            arp_spoofing.spoof(target_ip = target_ip , spoof_ip = spoof_ip)
             tmp = target_ip
             target_ip = spoof_ip
             spoof_ip = tmp
             time.sleep(2)
 
+############## need rework #################
+    def init_main(arpspf):
+        arp_spoofing.entry_message()
+        arpspf.state = input()
+        if arpspf.state == '1':
+            print("Please enter your broadcast IP :")
+            broadcast = input()
+            print("Please enter target IP :")
+            target = input()
+            arp_spoofing.while_spoof_loop(broadcast,target)
+
+
 
 if __name__ == "__main__":
     #track.init_main()
     arp = arp_spoofing()
-    arp.while_spoof_loop("172.29.112.0","172.29.96.1")
+    arp.init_main()
+    #arp.while_spoof_loop("172.29.112.0","172.29.96.1")
     # while True:
     #     arp.spoof("172.29.112.0","172.29.96.1")
     #     arp.spoof("172.29.96.1","172.29.112.0")
