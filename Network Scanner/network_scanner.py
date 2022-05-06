@@ -25,7 +25,12 @@ class network_scanner:
         net.state = ""
         net.clients_list = []
         net.clients_dict = []
-    
+
+        #scoring tests
+        net.scan_succeded = 0
+        net.scan_import_all_mac = 0
+        net.scan_high_counter_devices = 0
+
     def get_self_target(net):
         gateways = netifaces.gateways()
         default_gateway = gateways['default'][netifaces.AF_INET][0]

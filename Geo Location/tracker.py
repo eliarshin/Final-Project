@@ -28,6 +28,10 @@ class tracker:
         tracker.target = ""
         tracker.get_response = ""
         tracker.create_json =""
+
+        #scoring tests
+        tracker.all_params = "" 
+        tracker.all_domains = ""
         
     @staticmethod
     def entry_message():
