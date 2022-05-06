@@ -46,6 +46,7 @@ class brute_force:
         bf.working_password = ""
         bf.code = 0
         bf.state = ""
+        bf.boolean_checker = ""
 
         #Scoring tests variables
 
@@ -57,6 +58,10 @@ class brute_force:
         bf.ssh_check_persistance = 0
         bf.ftp_check_persistance = 0
         bf.http_check_persistance = 0
+        #Check if the connection is succeded
+        bf.ssh_found_credentials = 0
+        bf.ftp_found_credentials = 0 
+        bf.http_found_credentials = 0
 
 
     @staticmethod
@@ -122,9 +127,7 @@ class brute_force:
         if os.path.exists(bf.passwords_bulk) == False:
             console.print('[!] That dictionary/path doesnt exist')
             sys.exit(1)
-
         print('Starting threaded SSH bruteforce on' + bf.target + ' with account: ' + bf.username + '\n')
-
         with open(bf.passwords_bulk, 'r') as file:
             for line in file.readlines():
                 if bf.stop_flag == 1:
@@ -136,6 +139,7 @@ class brute_force:
                 t.start()
                 #print("thread = ", t)
                 time.sleep(0.5)
+        
         
     #posting
     def post(bf):

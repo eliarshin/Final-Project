@@ -44,6 +44,11 @@ class port_scanner:
         ps.description=[]
         ps.export = [] # export it
 
+        #scoring variables
+        ps.counter_open_ports = 0
+        ps.scan_completed = 0
+        ps.vulnerable_ports_found = 0
+
     def export_results(ps):
         ports =[]
         desc = []

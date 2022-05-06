@@ -23,6 +23,12 @@ class web_crawler:
         crawl.urls = []
         crawl.state = ""
 
+        #scoring tests
+        crawl.crawling_subodmain_success = 0
+        crawl.crawling_urls_scan_success = 0
+        crawl.vulnerable_subdomains_found = 0
+        crawl.vulnerable_urls_found = 0
+
     def parse_data(crawl):
         crawl.copy_subdomain_list = crawl.subdomain_list.read()
         crawl.subdomain_list_content = crawl.copy_subdomain_list.splitlines()
