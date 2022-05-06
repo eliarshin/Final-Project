@@ -47,6 +47,18 @@ class brute_force:
         bf.code = 0
         bf.state = ""
 
+        #Scoring tests variables
+
+        #Testing if the connection protocol is open to the world.
+        bf.ssh_is_connected = 0
+        bf.ftp_is_connected = 0
+        bf.http_is_connected = 0
+        #Checking if the session can run for long period without timeout.
+        bf.ssh_check_persistance = 0
+        bf.ftp_check_persistance = 0
+        bf.http_check_persistance = 0
+
+
     @staticmethod
     def entry_message():
         '''
