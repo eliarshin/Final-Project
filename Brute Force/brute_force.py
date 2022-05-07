@@ -48,6 +48,11 @@ class brute_force:
         bf.state = ""
         bf.boolean_checker = ""
 
+        bf.credentials = []
+        bf.counter = 0
+        bf.connection_flag = 0
+        bf.credentials_flag = 0
+
         #Scoring tests variables
 
         #Testing if the connection protocol is open to the world.
@@ -62,8 +67,11 @@ class brute_force:
         bf.ssh_found_credentials = 0
         bf.ftp_found_credentials = 0 
         bf.http_found_credentials = 0
+        #final scoring
+        bf.final_score = 0
 
 
+    # Static method to show the menu of the feature
     @staticmethod
     def entry_message():
         '''
@@ -88,14 +96,14 @@ class brute_force:
         console.print("[+]For SSH Brute force - 1")
         console.print("[+]For Web brute force - 2")
         console.print("[+]For FTP Brute force - 3")
-        
 
-   
+    #Read help for the user from our txt document
     def read_help(bf):
         with open('./Brute Force/help.txt', encoding='utf8') as f:
             for line in f:
                 print(line.strip())
 
+    #try ssh connection, every time for every thread
     def ssh_connect(bf):
         '''
         This function is responsible for the connection try for the ssh funcition
@@ -107,13 +115,19 @@ class brute_force:
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy()) #configure policy
         try: # try to connect to the target through port 22 with username and pw through our password bulk
             ssh.connect(bf.target,port=22, username=bf.username, password=bf.single_password)
+            bf.connection_flag = 0 # scoring test
             stop_flag = 1
             console.print('[+] Found password: @@@@@@@@@@@@@@@@@@@@' + bf.single_password + ' , for account: ' + bf.username)
-            bf.working_password = bf.single_password
+            bf.working_password = bf.single_password #credentials test
+            bf.credentials.append(bf.username) 
+            bf.credentials.append(bf.working_password)
+            bf.credentials.append(bf.target)
+            bf.credentials_flag =1
         except: # If the password not correct we move forward to the next one and close connection
             console.print( '[-] Incorrect login, the password doesn\'t match: ' + bf.single_password)
         ssh.close()
 
+    #the threaded funciton that sent everytime password to the ssh_connect function
     def ssh_thread(bf):
         '''
         This function is responsible to mulithread the connection tries
@@ -134,14 +148,14 @@ class brute_force:
                     t.join()
                     exit()
                 bf.single_password = line.strip()
+                bf.counter = bf.counter + 1
                 #print("pw is + ",bf.single_password)
                 t=threading.Thread(target=bf.ssh_connect(), args=(bf.single_password,)) # objeto thread
                 t.start()
                 #print("thread = ", t)
                 time.sleep(0.5)
-        
-        
-    #posting
+             
+    #posting - http brute force function
     def post(bf):
         #print("Please enter target")
         console.print("Your target is: ",bf.target,style = "dim cyan")
@@ -149,13 +163,19 @@ class brute_force:
         data_dict ={"username" : "admin", "password":"password"}
         with open(bf.passwords_bulk, 'r') as file:
             for line in file.readlines():
+                bf.counter = bf.counter + 1
                 bf.single_password = line.strip()
                 data_to_send = {"username" : "admin" , "password" : bf.single_password}
                 response = requests.post(bf.target,data=data_to_send)
+                bf.connection_flag = 0
                #print(response.content)
                 if "Login failed" not in str(response.content):
                     print("[+] Password found --->" + bf.single_password)
                     bf.working_password = bf.single_password
+                    bf.credentials.append("admin")
+                    bf.credentials.append(bf.working_password)
+                    bf.credentials.append(bf.target)
+                    bf.credentials_flag = 1
 
     def connect_ftp(bf):
         while True:
@@ -169,6 +189,8 @@ class brute_force:
                 server.connect(bf.target, bf.port, timeout=5)
                 # login using the credentials (user & password)
                 server.login(bf.username, password)
+                bf.counter = bf.counter + 1
+                bf.connection_flag = 0
             except ftplib.error_perm:
                 # login failed, wrong credentials
                 pass
@@ -179,6 +201,10 @@ class brute_force:
                 print(f"\tUser: {bf.username}")
                 print(f"\tPassword: {password}")
                 bf.working_password = password
+                bf.credentials.append(bf.username)
+                bf.credentials.append(bf.working_password)
+                bf.credentials.append(bf.target)
+                bf.credentials_flag = 1
                 # we found the password, let's clear the queue
                 with bf.q.mutex:
                     bf.q.queue.clear()
@@ -187,7 +213,6 @@ class brute_force:
             finally:
                 # notify the queue that the task is completed for this password
                 bf.q.task_done()
-
 
     def thread_ftp(bf):
         passwords = open("Brute Force\passwords.txt").read().split("\n")
@@ -203,6 +228,38 @@ class brute_force:
             thread.start()
         # wait for the queue to be empty
         bf.q.join()
+
+
+
+    #Scoring tests
+    def scoring_test_connection(bf):
+        if bf.connection_flag == 1 and bf.stop_flag == '1':
+            bf.ssh_is_connected = 1
+        elif bf.connection_flag == 1 and bf.stop_flag == '2':
+            bf.ftp_is_connected = 1
+        elif bf.connection_flag == 1 and bf.stop_flag == '3':
+            bf.http_is_connected = 1
+
+    def persistance_test_connection(bf):
+        #print(bf.counter)
+        if bf.counter >= len(bf.passwords_bulk)/3 and bf.state == '1':
+            bf.ssh_check_persistance = 1
+        if bf.counter >= len(bf.passwords_bulk)/3 and bf.state == '2':
+            bf.ftp_check_persistance = 1
+        if bf.counter >= len(bf.passwords_bulk)/3 and bf.state == '3':
+            bf.http_check_persistance = 1
+    
+    def check_found_credentials(bf):
+        if bf.credentials_flag == 1 and bf.state == '1':
+            bf.ssh_found_credentials = 1
+        elif bf.credentials_flag == 1 and bf.state == '2':
+            bf.ftp_found_credentials = 1
+        elif bf.credentials_flag == 1 and bf.state == '3':
+            bf.http_found_credentials = 1
+    
+    #def security_score(bf):
+
+
 
     def init_main(bf):
         '''
@@ -226,6 +283,7 @@ class brute_force:
             console.print("Please enter username to check with(recommendated - 'admin') :")
             bf.username = input()
             bf.ssh_thread()
+            bf.persistance_test_connection()
         elif(bf.state == '2'):
             console.print("You chose HTTP Brute Force")
             console.print("Please enter your target (include 'http://' and login page) : ")
