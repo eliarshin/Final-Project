@@ -52,6 +52,7 @@ class brute_force:
         bf.counter = 0
         bf.connection_flag = 0
         bf.credentials_flag = 0
+        bf.report_message = []
 
         #Scoring tests variables
 
@@ -115,7 +116,7 @@ class brute_force:
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy()) #configure policy
         try: # try to connect to the target through port 22 with username and pw through our password bulk
             ssh.connect(bf.target,port=22, username=bf.username, password=bf.single_password)
-            bf.connection_flag = 0 # scoring test
+            bf.connection_flag = 1 # scoring test
             stop_flag = 1
             console.print('[+] Found password: @@@@@@@@@@@@@@@@@@@@' + bf.single_password + ' , for account: ' + bf.username)
             bf.working_password = bf.single_password #credentials test
@@ -125,6 +126,7 @@ class brute_force:
             bf.credentials_flag =1
         except: # If the password not correct we move forward to the next one and close connection
             console.print( '[-] Incorrect login, the password doesn\'t match: ' + bf.single_password)
+            bf.connection_flag = 1
         ssh.close()
 
     #the threaded funciton that sent everytime password to the ssh_connect function
@@ -167,7 +169,7 @@ class brute_force:
                 bf.single_password = line.strip()
                 data_to_send = {"username" : "admin" , "password" : bf.single_password}
                 response = requests.post(bf.target,data=data_to_send)
-                bf.connection_flag = 0
+                bf.connection_flag = 1
                #print(response.content)
                 if "Login failed" not in str(response.content):
                     print("[+] Password found --->" + bf.single_password)
@@ -190,7 +192,7 @@ class brute_force:
                 # login using the credentials (user & password)
                 server.login(bf.username, password)
                 bf.counter = bf.counter + 1
-                bf.connection_flag = 0
+                bf.connection_flag = 1
             except ftplib.error_perm:
                 # login failed, wrong credentials
                 pass
@@ -233,20 +235,20 @@ class brute_force:
 
     #Scoring tests
     def scoring_test_connection(bf):
-        if bf.connection_flag == 1 and bf.stop_flag == '1':
+        if bf.connection_flag == 1 and bf.state == '1':
             bf.ssh_is_connected = 1
-        elif bf.connection_flag == 1 and bf.stop_flag == '2':
+        elif bf.connection_flag == 1 and bf.state == '2':
             bf.ftp_is_connected = 1
-        elif bf.connection_flag == 1 and bf.stop_flag == '3':
+        elif bf.connection_flag == 1 and bf.state == '3':
             bf.http_is_connected = 1
 
     def persistance_test_connection(bf):
         #print(bf.counter)
         if bf.counter >= len(bf.passwords_bulk)/3 and bf.state == '1':
             bf.ssh_check_persistance = 1
-        if bf.counter >= len(bf.passwords_bulk)/3 and bf.state == '2':
+        elif bf.counter >= len(bf.passwords_bulk)/3 and bf.state == '2':
             bf.ftp_check_persistance = 1
-        if bf.counter >= len(bf.passwords_bulk)/3 and bf.state == '3':
+        elif bf.counter >= len(bf.passwords_bulk)/3 and bf.state == '3':
             bf.http_check_persistance = 1
     
     def check_found_credentials(bf):
@@ -257,7 +259,43 @@ class brute_force:
         elif bf.credentials_flag == 1 and bf.state == '3':
             bf.http_found_credentials = 1
     
-    #def security_score(bf):
+    def security_score(bf):
+        if bf.ssh_is_connected == 1:
+            bf.report_message.append("SSH connection succeded")
+            bf.final_score = bf.final_score + 2
+        elif bf.ftp_is_connected == 1:
+            bf.report_message.append("FTP connection succeded")
+            bf.final_score = bf.final_score + 2
+        elif bf.http_is_connected == 1:
+            bf.report_message.append("HTTP connection succeded")
+            bf.final_score = bf.final_score + 2
+        
+        if bf.ssh_check_persistance == 1:
+            bf.report_message.append("SSH connection is persistant")
+            bf.final_score = bf.final_score + 3
+        elif bf.ftp_check_persistance == 1:
+            bf.report_message.append("FTP connection is persistant")
+            bf.final_score = bf.final_score + 3
+        elif bf.http_check_persistance == 1:
+            bf.report_message.append("HTTP connection is persistant")
+        
+        if bf.ssh_found_credentials == 1:
+            bf.report_message.append("SSH credentials found")
+            bf.final_score = bf.final_score + 8
+        elif bf.ftp_found_credentials == 1:
+            bf.report_message.append("FTP credintials found")
+            bf.final_score = bf.final_score + 8
+        elif bf.http_found_credentials == 1:
+            bf.report_message.append("HTTP credentials found")
+            bf.final_score = bf.final_score + 8
+
+    def final_results(bf):
+        print("Your final security score is :")
+        print(bf.final_score)
+        print("[+] Security tests that you failed on :")
+        for report in bf.report_message:
+            print(report)
+        
 
 
 
@@ -283,7 +321,15 @@ class brute_force:
             console.print("Please enter username to check with(recommendated - 'admin') :")
             bf.username = input()
             bf.ssh_thread()
+            bf.scoring_test_connection()
             bf.persistance_test_connection()
+            bf.check_found_credentials()
+            bf.security_score()
+            print(bf.ssh_is_connected)
+            print(bf.ssh_check_persistance)
+            print(bf.ssh_found_credentials)
+            print(bf.final_score)
+            bf.final_results()
         elif(bf.state == '2'):
             console.print("You chose HTTP Brute Force")
             console.print("Please enter your target (include 'http://' and login page) : ")
