@@ -25,6 +25,7 @@ class network_scanner:
         net.state = ""
         net.clients_list = []
         net.clients_dict = []
+        net.flag = 0
 
         #scoring tests
         net.scan_succeded = 0
@@ -48,7 +49,6 @@ class network_scanner:
         zip_ip_mac = zip(ip,mac)
         df = pd.DataFrame(columns=['IP', 'MAC'],data=zip_ip_mac)
         df.to_csv('results_net.csv')
-
 
     def scan(net):
         arp_request = scapy.ARP(pdst=net.target)
@@ -83,6 +83,24 @@ class network_scanner:
         console.print("[+]To choose the network to scan press - 2")
         console.print("[+]To choose the subset for scanning (default 24) - 3")
 
+    def network_scan_success(net):
+        if len(net.clients_list) > 0:
+            net.scan_succeded = 1
+    
+    def is_mac_address_found(net):
+        counter = 0
+        for devices in net.clients_list:
+            if len(devices["mac"]) > 0:
+                counter = counter + 1
+        
+        if counter > 0:
+            net.scan_import_all_mac = 1
+    
+    def devices_on_network_check(net):
+        if len(net.clients_list) > 8:
+            net.scan_high_counter_devices = 1
+
+
     def init_main(net):
         net.entry_message()
         
@@ -93,7 +111,12 @@ class network_scanner:
             net.get_self_target()
             net.scan()
             net.results()
-
+            net.network_scan_success()
+            net.is_mac_address_found()
+            net.devices_on_network_check()
+            print(net.scan_succeded)
+            print(net.scan_import_all_mac)
+            print(net.scan_high_counter_devices)
         if(net.state == 'H' or net.state == 'h'):
             net.read_help()
 

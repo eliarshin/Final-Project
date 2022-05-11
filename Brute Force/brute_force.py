@@ -289,6 +289,13 @@ class brute_force:
             bf.report_message.append("HTTP credentials found")
             bf.final_score = bf.final_score + 8
 
+    def final_results(bf):
+        print("Your final security score is :")
+        print(bf.final_score)
+        print("[+] Security tests that you failed on :")
+        for report in bf.report_message:
+            print(report)
+        
 
 
 
@@ -322,6 +329,7 @@ class brute_force:
             print(bf.ssh_check_persistance)
             print(bf.ssh_found_credentials)
             print(bf.final_score)
+            bf.final_results()
         elif(bf.state == '2'):
             console.print("You chose HTTP Brute Force")
             console.print("Please enter your target (include 'http://' and login page) : ")
