@@ -28,9 +28,12 @@ class network_scanner:
         net.flag = 0
 
         #scoring tests
+        net.report_message = []
         net.scan_succeded = 0
         net.scan_import_all_mac = 0
         net.scan_high_counter_devices = 0
+
+        net.final_score = 0
 
     def get_self_target(net):
         gateways = netifaces.gateways()
@@ -93,12 +96,77 @@ class network_scanner:
             if len(devices["mac"]) > 0:
                 counter = counter + 1
         
-        if counter > 0:
+        if counter == len(devices["ip"]):
             net.scan_import_all_mac = 1
     
     def devices_on_network_check(net):
         if len(net.clients_list) > 8:
             net.scan_high_counter_devices = 1
+
+    def security_score(net):
+        if net.scan_succeded == 1:
+            net.final_score = net.final_score + 3
+            net.report_message.append("Network is public - Scan succeeded")
+        else:
+            net.report_message.append("Scan failed")
+        if net.scan_import_all_mac == 1:
+            net.final_score = net.final_score + 3
+            net.report_message.append("All MAC address are public")
+        else:
+            net.report_message.append("Failed get MAC address")
+        if net.scan_high_counter_devices == 1:
+            net.final_score = net.final_score + 4
+            net.report_message.append("Many devices found on network - higher than treshold")
+        else:
+            net.report_message.append("Failed extract devices above the treshold")
+
+    def final_results(net):
+        test_cases = ["SCANNABLE NETWORK","PUBLIC MAC ADDRESS","PUBLIC DEVICES ABOVE TRESHOLD"]
+        color_type = ""
+        risk_type = ""
+        counter = 0
+
+        for client in net.clients_list:
+            counter = counter+1
+
+
+        if net.final_score == 0:
+            color_score = "green"
+            risk_type = "Low"
+        elif net.final_score > 0 and net.final_score < 6:
+            color_score = "yellow"
+            risk_type = "Medium"
+        else:
+            color_score = "red"
+            risk_type = "High"
+
+        art = text2art("Results",font='small',chr_ignore=True)
+        print(art)
+
+        console.print(f"[+] Your final secuirty score is:[{color_score}]{net.final_score}[/{color_score}] Risk:[{color_score}]{risk_type}[/{color_score}]")
+        print()
+
+        console.print(f"[+] Your target is:[bold red]{net.target}[/bold red]")
+        console.print(f"[+] Devices found on network:[bold red]{counter}[/bold red]")
+        console.print("[magenta]Scan Results:")
+        print()
+        net.results()
+
+        console.print("[magenta]Test cases:[/magenta]")
+
+        console.print("Secuirty tests:", style="bold blue")
+        table = Table(show_header=True, header_style="bold green")
+        table.add_column("TEST CASE", justify="left", style="cyan", no_wrap=True)
+        table.add_column("STATUS", justify="left", style="cyan", no_wrap=True)
+        table.add_column("SUCCESS", justify="left", style="red", no_wrap=True)
+        for report,case in zip(net.report_message,test_cases): ## need to add database with the vulnerability of the ports
+            if "failed" in report.lower():
+                success_type = "V"
+                table.add_row(str(case), str(report), f"[green]{success_type}[/green]")
+            else:
+                success_type = "X"
+                table.add_row(str(case), str(report), f"[red]{success_type}[/red]")
+        console.print(table)
 
 
     def init_main(net):
@@ -114,9 +182,11 @@ class network_scanner:
             net.network_scan_success()
             net.is_mac_address_found()
             net.devices_on_network_check()
-            print(net.scan_succeded)
-            print(net.scan_import_all_mac)
-            print(net.scan_high_counter_devices)
+            net.security_score()
+            #print(net.scan_succeded)
+            #print(net.scan_import_all_mac)
+            #print(net.scan_high_counter_devices)
+            net.final_results()
         if(net.state == 'H' or net.state == 'h'):
             net.read_help()
 

@@ -1,4 +1,5 @@
 #from sre_parse import State
+from openpyxl import load_workbook
 import paramiko, sys, os, socket
 import threading, time
 from pyparsing import Word
@@ -9,8 +10,7 @@ import ftplib
 from threading import Thread
 import queue
 import pandas as pd
-
-
+from rich.table import Table
 ###TASKS###
 #Export results
 console=Console()
@@ -39,7 +39,7 @@ class brute_force:
         bf.port = 21 # default for ftp connect
         bf.n_threads = 30 # default threads number
         bf.target = ""
-        bf.username= ""
+        bf.username= "admin"
         bf.stop_flag = 0
         bf.passwords_bulk = "./Brute Force/passwords.txt"
         bf.single_password = ""
@@ -47,6 +47,7 @@ class brute_force:
         bf.code = 0
         bf.state = ""
         bf.boolean_checker = ""
+        bf.passwords_counter = 0
 
         bf.credentials = []
         bf.counter = 0
@@ -146,6 +147,7 @@ class brute_force:
         print('Starting threaded SSH bruteforce on' + bf.target + ' with account: ' + bf.username + '\n')
         with open(bf.passwords_bulk, 'r') as file:
             for line in file.readlines():
+                bf.passwords_counter = bf.passwords_counter + 1
                 if bf.stop_flag == 1:
                     t.join()
                     exit()
@@ -164,6 +166,7 @@ class brute_force:
         #bf.target = input()
         data_dict ={"username" : "admin", "password":"password"}
         with open(bf.passwords_bulk, 'r') as file:
+            bf.passwords_counter = bf.passwords_counter + 1
             for line in file.readlines():
                 bf.counter = bf.counter + 1
                 bf.single_password = line.strip()
@@ -219,6 +222,7 @@ class brute_force:
     def thread_ftp(bf):
         passwords = open("Brute Force\passwords.txt").read().split("\n")
         print("[+] Passwords to try:", len(passwords))
+        bf.passwords_counter = len(passwords)
         # put all passwords to the queue
         for password in passwords:
             bf.q.put(password)
@@ -244,11 +248,11 @@ class brute_force:
 
     def persistance_test_connection(bf):
         #print(bf.counter)
-        if bf.counter >= len(bf.passwords_bulk)/3 and bf.state == '1':
+        if bf.counter >= (bf.passwords_counter)/3 and bf.state == '1':
             bf.ssh_check_persistance = 1
-        elif bf.counter >= len(bf.passwords_bulk)/3 and bf.state == '2':
+        elif bf.counter >= (bf.passwords_counter)/3 and bf.state == '2':
             bf.ftp_check_persistance = 1
-        elif bf.counter >= len(bf.passwords_bulk)/3 and bf.state == '3':
+        elif bf.counter >= (bf.passwords_counter)/3 and bf.state == '3':
             bf.http_check_persistance = 1
     
     def check_found_credentials(bf):
@@ -269,6 +273,8 @@ class brute_force:
         elif bf.http_is_connected == 1:
             bf.report_message.append("HTTP connection succeded")
             bf.final_score = bf.final_score + 2
+        else:
+            bf.report_message.append("Connection Failed")
         
         if bf.ssh_check_persistance == 1:
             bf.report_message.append("SSH connection is persistant")
@@ -278,6 +284,8 @@ class brute_force:
             bf.final_score = bf.final_score + 3
         elif bf.http_check_persistance == 1:
             bf.report_message.append("HTTP connection is persistant")
+        else:
+            bf.report_message.append("Persistance Failed")
         
         if bf.ssh_found_credentials == 1:
             bf.report_message.append("SSH credentials found")
@@ -288,13 +296,72 @@ class brute_force:
         elif bf.http_found_credentials == 1:
             bf.report_message.append("HTTP credentials found")
             bf.final_score = bf.final_score + 8
+        else:
+            bf.report_message.append("Credentials not found")
 
     def final_results(bf):
-        print("Your final security score is :")
-        print(bf.final_score)
-        print("[+] Security tests that you failed on :")
-        for report in bf.report_message:
-            print(report)
+        color_score = ""
+        risk_type = ""
+        attack_type = ""
+        test_cases = ["1.CONNECTION SUCCEEDED","2.PERSISTANT CONNECTION","3.CREDENTIALS FOUND"]
+        success_type =""
+
+        
+
+        if bf.state == '1':
+            attack_type ="SSH"
+        elif bf.state == '2':
+            attack_type ="HTTP"
+        elif bf.state == '3':
+            attack_type ="FTP"
+
+        if bf.final_score == 0:
+            color_score = "green"
+            risk_type = "Low"
+        elif bf.final_score > 0 and bf.final_score < 6:
+            color_score = "yellow"
+            risk_type = "Medium"
+        else:
+            color_score = "red"
+            risk_type = "High"
+        art = text2art("Results",font='small',chr_ignore=True)
+        print(art)
+        console.print(f"[+] Your final secuirty score is:[{color_score}]{bf.final_score}[/{color_score}] Risk:[{color_score}]{risk_type}[/{color_score}]")
+        print()
+        console.print(f"[+] Your target is:[bold red]{bf.target}[/bold red]")
+        console.print(f"[+] Attack channel is:[bold red]{attack_type}[/bold red]")
+        console.print(f"[+] Tested with the username:[bold red]{bf.username}[/bold red]")
+        console.print(f"[+] Your passwords path is:[bold red]{bf.passwords_bulk}[/bold red]")
+        console.print(f"[+] Total passwords tested:[bold red]{bf.passwords_counter}[/bold red]")
+        print()
+        console.print("[magenta]Test cases:[/magenta]")
+
+        console.print("Secuirty tests:", style="bold blue")
+        table = Table(show_header=True, header_style="bold green")
+        table.add_column("TEST CASE", justify="left", style="cyan", no_wrap=True)
+        table.add_column("STATUS", justify="left", style="cyan", no_wrap=True)
+        table.add_column("SUCCESS", justify="left", style="red", no_wrap=True)
+        for report,case in zip(bf.report_message,test_cases): ## need to add database with the vulnerability of the ports
+            if "not" in report.lower():
+                success_type = "V"
+                table.add_row(str(case), str(report), f"[green]{success_type}[/green]")
+            else:
+                success_type = "X"
+                table.add_row(str(case), str(report), f"[red]{success_type}[/red]")
+        console.print(table)
+
+        is_cred_found = ""
+        if len(bf.working_password) > 0:
+            is_cred_found = "TRUE"
+            console.print(f"[magenta]Credentials found[/magenta]:[red]{is_cred_found}[/red]")
+        else:
+            is_cred_found = "FALSE"
+            console.print(f"[magenta]Credentials found[/magenta]:[green]{is_cred_found}[/green]")
+        if is_cred_found == "TRUE":
+            console.print(f"[magenta]Username:[/magenta]:[red]{bf.username}[/red]")
+            console.print(f"[magenta]Password:[/magenta]:[red]{bf.wroking_password}[/red]")
+
+            
         
 
 
@@ -325,10 +392,6 @@ class brute_force:
             bf.persistance_test_connection()
             bf.check_found_credentials()
             bf.security_score()
-            print(bf.ssh_is_connected)
-            print(bf.ssh_check_persistance)
-            print(bf.ssh_found_credentials)
-            print(bf.final_score)
             bf.final_results()
         elif(bf.state == '2'):
             console.print("You chose HTTP Brute Force")
@@ -342,6 +405,11 @@ class brute_force:
             bf.passwords_bulk = input()
             console.print("Press 'b' to back to the menu")
             bf.state = input()
+            bf.scoring_test_connection()
+            bf.persistance_test_connection()
+            bf.check_found_credentials()
+            bf.security_score()
+            bf.final_results()
             if(bf.state == 'b' or bf.state == 'B'):
                 bf.init_main()
         elif(bf.state =='3'):
@@ -351,6 +419,11 @@ class brute_force:
             console.print("Please enter username to check with(reccomendated - 'admin') :")
             bf.username = input()
             bf.thread_ftp()
+            bf.scoring_test_connection()
+            bf.persistance_test_connection()
+            bf.check_found_credentials()
+            bf.security_score()
+            bf.final_results()
             
 
 
