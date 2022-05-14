@@ -7,6 +7,7 @@ import json
 import random
 #from turtle import pd
 from typing import OrderedDict
+from cv2 import threshold
 from numpy import False_
 from rich.console import Console
 from rich.table import Table
@@ -45,9 +46,16 @@ class port_scanner:
         ps.export = [] # export it
 
         #scoring variables
+        ps.scan_flag_start = 0
+        ps.scan_flag_complete = 0
+
+        ps.scan_started = 0
         ps.counter_open_ports = 0
         ps.scan_completed = 0
         ps.vulnerable_ports_found = 0
+        #
+        ps.final_score = 0
+        ps.report_message = []
 
     def export_results(ps):
         ports =[]
@@ -104,6 +112,7 @@ class port_scanner:
                 ps.open_ports.append(port)
                 msg = sock.recv(4096) # recived answer to dictionary
                 ps.recived_data[port] = msg #Recied data into dictionary
+                ps.scan_flag_start = 1
             sock.close()
         except:
             pass
@@ -213,7 +222,8 @@ class port_scanner:
             ps.shuffle_ports()
             ps.run()
             ps.export_results()
-            print((ps.recived_data))
+            print(f"Recived extra data :{ps.recived_data}")
+            ps.is_ports_vulnerable()
 
         if ps.state == '3':
             target = console.input("[dim cyan]Enter target URL or IP address: ")
@@ -229,7 +239,7 @@ class port_scanner:
             with open('./Port Scanner/help.txt') as f:
                 contents = f.read()
                 print(contents)
-                port_scan.init_main()
+                ps.init_main()
         
 
     #this function run to us port_Scan function with threadpool
@@ -244,6 +254,28 @@ class port_scanner:
             threadpool(ps.port_scan, ps.input_ports, len(ps.input_ports))
             ps.read_from_db()
             ps.display_results()
+        ps.scan_flag_complete = 1
+
+    def is_scan_started(ps):
+        if ps.scan_flag_start == 1:
+            ps.scan_started = 1
+    def is_scan_detected(ps):
+        if ps.scan_flag_complete == 1:
+            ps.scan_completed = 1
+    def is_open_ports_found(ps):
+        threshold = 4
+        if len(ps.open_ports) > threshold:
+            ps.counter_open_ports = len(ps.open_ports)
+    def is_ports_vulnerable(ps):
+        vulnerable_ports_bulk = ["20","21","22","139","137","445","53","443","80","8080","8443","23","25","69"]
+        counter = 0
+        for port in vulnerable_ports_bulk:
+            #print(int(port))
+            if (port) in str(ps.open_ports):
+                print(port)
+            
+
+        
 
 if __name__ == "__main__":
     port_scan = port_scanner()
