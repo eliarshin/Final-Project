@@ -29,9 +29,8 @@ class arp_spoofing:
         to perform his brute force
         In addition he can also import passwords list by himself
         or check for information by pressing H
-        We MAKE PRETTY LOGO ASWELL
         '''
-        art_font = text2art("Tracker",font='cybermedium',chr_ignore=True)
+        art_font = text2art("ARP Spoofing",font='cybermedium',chr_ignore=True)
         console.print(f"[bold red]{art_font}[/bold red]")
         console.print("#" * 55, style="bold green")
         console.print("#"*12,"ARP Spoofer", "#"*12,style="dim cyan")

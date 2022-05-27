@@ -15,7 +15,8 @@ If theres information about the company on the API it add the risk complexity on
 risk algorithm calculation
 import pandas as pd
 '''
-
+## Everything is ok - Else - Data that not need to be published and it is published
+## search email patterns of company
 console=Console()
 
 class tracker:

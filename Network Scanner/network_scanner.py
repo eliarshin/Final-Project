@@ -16,6 +16,10 @@ import netifaces
 'Input from user'
 'Display results'
 
+## find ports that are vulnerable 
+## find versions of devices
+
+
 console = Console()
 class network_scanner:
 

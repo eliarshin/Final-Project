@@ -359,7 +359,7 @@ class brute_force:
             console.print(f"[magenta]Credentials found[/magenta]:[green]{is_cred_found}[/green]")
         if is_cred_found == "TRUE":
             console.print(f"[magenta]Username:[/magenta]:[red]{bf.username}[/red]")
-            console.print(f"[magenta]Password:[/magenta]:[red]{bf.wroking_password}[/red]")
+            console.print(f"[magenta]Password:[/magenta]:[red]{bf.working_password}[/red]")
 
             
         
