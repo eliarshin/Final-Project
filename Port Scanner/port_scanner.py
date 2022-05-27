@@ -20,6 +20,7 @@ import openpyxl
 '1. Add method to scan bulk from user directory'
 '2. Edit the help functions'
 '3. Find a database that giving information about open ports'
+'4. Add port scan also for UDP services'
 
 
 console = Console() ## for pretty write
@@ -56,6 +57,7 @@ class port_scanner:
         #
         ps.final_score = 0
         ps.report_message = []
+        ps.common_unsecure_ports = []
 
     def export_results(ps):
         ports =[]
@@ -266,13 +268,15 @@ class port_scanner:
         threshold = 4
         if len(ps.open_ports) > threshold:
             ps.counter_open_ports = len(ps.open_ports)
+
     def is_ports_vulnerable(ps):
         vulnerable_ports_bulk = ["20","21","22","139","137","445","53","443","80","8080","8443","23","25","69"]
         counter = 0
         for port in vulnerable_ports_bulk:
             #print(int(port))
             if (port) in str(ps.open_ports):
-                print(port)
+                ps.common_unsecure_ports.append(port)
+                counter = counter+1
             
 
         

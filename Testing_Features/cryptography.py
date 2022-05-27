@@ -4,7 +4,8 @@ from Cryptodome.Random import get_random_bytes
 from io import BytesIO
 import base64
 import zlib
-
+#https://pycryptodome.readthedocs.io/en/latest/
+#https://pycryptodome.readthedocs.io/en/latest/src/public_key/public_key.html
 #142
 
 def generate():
@@ -23,33 +24,33 @@ def get_rsa_cipher(keytype):
     return (PKCS1_OAEP.new(rsakey), rsakey.size_in_bytes())
 
 def encrypt(plaintext):
-    compressed_text = zlib.compress(plaintext)
-    session_key = get_random_bytes(16)
+    compressed_text = zlib.compress(plaintext) # generating random session key that will be used on AES cyhper
+    session_key = get_random_bytes(16) # compressed text using that cypher above
     cipher_aes = AES.new(session_key, AES.MODE_EAX)
-    ciphertext, tag = cipher_aes.encrypt_and_digest(compressed_text)
+    ciphertext, tag = cipher_aes.encrypt_and_digest(compressed_text) # passwing the session key as part of returned payload
     cipher_rsa, _ = get_rsa_cipher('pub')
-    encrypted_session_key = cipher_rsa.encrypt(session_key)
-    msg_payload = encrypted_session_key + cipher_aes.nonce + tag + ciphertext
+    encrypted_session_key = cipher_rsa.encrypt(session_key) # all the inforamtion for decryption is here.
+    msg_payload = encrypted_session_key + cipher_aes.nonce + tag + ciphertext # base64 encoding + return the encrypted mesaage 
     encrypted = base64.encodebytes(msg_payload)
     return(encrypted)
 
 def decrypt(encrypted):
-    encrypted_bytes = BytesIO(base64.decodebytes(encrypted))
+    encrypted_bytes = BytesIO(base64.decodebytes(encrypted)) # read the encyrpted message on base 64 (its the key)
     cipher_rsa, keysize_in_bytes = get_rsa_cipher('pri')
-    encrypted_session_key = encrypted_bytes.read(keysize_in_bytes)
+    encrypted_session_key = encrypted_bytes.read(keysize_in_bytes) # decrypt the key using the RSA private key
     nonce = encrypted_bytes.read(16)
     tag = encrypted_bytes.read(16)
     ciphertext = encrypted_bytes.read()
-    session_key = cipher_rsa.decrypt(encrypted_session_key)
-    cipher_aes = AES.new(session_key, AES.MODE_EAX, nonce)
+    session_key = cipher_rsa.decrypt(encrypted_session_key) # decrypt the message itself
+    cipher_aes = AES.new(session_key, AES.MODE_EAX, nonce) # plain text decompressed
     decrypted = cipher_aes.decrypt_and_verify(ciphertext, tag)
-    plaintext = zlib.decompress(decrypted)
+    plaintext = zlib.decompress(decrypted) # returning it
     return plaintext
 
 if __name__ == '__main__':
     generate()
 
 if __name__ == '__main__':
-    plaintext = b'hey there you.'
+    plaintext = b'Testing my ecnryption'
     print(encrypt(plaintext))
     print(decrypt(encrypt(plaintext)))
