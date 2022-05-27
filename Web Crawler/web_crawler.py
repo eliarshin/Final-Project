@@ -2,9 +2,10 @@
 from io import StringIO
 from bs4 import BeautifulSoup
 from pkg_resources import find_distributions
+import urllib.request
 import requests
 import re
-from urllib.parse import urlparse
+from urllib.parse import urlparse 
 from urllib.parse import urljoin
 from rich.console import Console
 from art import *
@@ -18,8 +19,14 @@ class web_crawler:
         crawl.target = ""
         crawl.found_subdomains = []
         crawl.subdomain_list = open("./Web Crawler/subdomains_list.txt")
+        crawl.admin_list = open("./Web Crawler/admin_list.txt")
+        crawl.directories_list = open("./Web Crawler/admin_list.txt")
+        crawl.copy_directories_list =""
+        crawl.directories_list_content =""
         crawl.copy_subdomain_list = ""
         crawl.subdomain_list_content = ""
+        crawl.copy_admin_list = ""
+        crawl.admin_list_content = ""
         crawl.urls = []
         crawl.state = ""
 
@@ -29,8 +36,13 @@ class web_crawler:
         crawl.vulnerable_subdomains_found = 0
         crawl.vulnerable_urls_found = 0
 
+
     def parse_data(crawl):
         crawl.copy_subdomain_list = crawl.subdomain_list.read()
+        crawl.copy_directories_list = crawl.directories_list.read()
+        crawl.copy_admin_list = crawl.admin_list.read()
+        crawl.directories_list_content = crawl.copy_directories_list.splitlines()
+        crawl.admin_list_content = crawl.copy_admin_list.splitlines()
         crawl.subdomain_list_content = crawl.copy_subdomain_list.splitlines()
 
     def get_target(crawl):
@@ -59,33 +71,90 @@ class web_crawler:
         crawl.parse_data()
         for subdomain in crawl.subdomain_list_content:
             url = (f"http://{subdomain}.{crawl.target}")
+            #print("URL = "+ url)
             try:
                 requests.get(url)
-            except requests.ConnectionError:
+            except requests.exceptions.ConnectionError:
                 pass
             else:
                 #print(f"Discovered subdomain : :{url}" )
                 crawl.found_subdomains.append(url)
-        for u in crawl.found_subdomains:
-            print("[+]URL - " + u)
-    
-    def find_directories_current_page(crawl):
+        # for u in crawl.found_subdomains:
+        #     print("[+]URL - " + u)
+
+    def robots_page_check(crawl):
+        try:
+            req = requests.get(crawl.target + '/robots.txt')
+            if '<html>' in req.text:
+                print("Robots.txt not found")
+            else:
+                print("Robots.txt found. Check for findings")
+                print(req.text)
+        except:
+            print("Robots.txt not found")
+
+    def find_urls_current_page(crawl):
         response = requests.get(crawl.target)
         soup = BeautifulSoup(response.text,"html.parser")
         for link in soup.find_all("a"):
-            data = link.get("href")
-            crawl.urls.append(data)
-            print(data)
+            #print(f"{link.get('href')} -> {link.text}")
+            #data = link.get("href")
+            crawl.urls.append(f"{link.get('href')} -> {link.text}")
+            #print(data)
+
+    def find_directories(crawl):
+        crawl.parse_data()
+        for directory in crawl.directories_list_content:
+            url = (f"http://{crawl.target}/{directory}")
+            try:
+                resp = requests.get(url)
+            except requests.exceptions.ConnectionError:
+                pass
+            if resp:
+                print("Discovered URL: "+url)
+
+    def find_admin_login_page(crawl):
+        crawl.parse_data()
+        for admin_link in crawl.admin_list_content:
+            url = (f"http://{crawl.target}/{admin_link}")
+            #req = requests.get(url)
+            try:
+                resp = requests.get(url)
+            except requests.exceptions.ConnectionError:
+                pass
+            if resp:
+                print("Discovered URL: "+url)
+            
+            
+            # else:
+            #     print("request link = "+url)
+
+
+            
+    def display_subdomain_results(crawl):
+        for domain in crawl.found_subdomains:
+            console.print(domain)
+            print("--------------------")   
+    def display_urls_results(crawl):
+        for link in crawl.urls:
+            console.print(link)
+            print("--------------------")
 
     def init_main(crawl):
         crawl.entry_message()
         crawl.state = input("Please enter you crawl option :")
         crawl.get_target()
         
+        crawl.robots_page_check()
+        #crawl.find_admin_login_page()
+        #crawl.find_directories()
+
         if crawl.state == '1':
             crawl.find_subdomains()
+            crawl.display_subdomain_results()
         elif crawl.state == '2':
-            crawl.find_directories_current_page()
+            crawl.find_urls_current_page()
+            crawl.display_urls_results()
             crawl.export_information()
 
 
@@ -105,8 +174,9 @@ class web_crawler:
     
     def get_started(crawl):
         crawl.get_target()
+        crawl.robots_page_check()
         #crawl.find_subdomains()
-        crawl.find_directories_current_page()
+        #crawl.find_urls_current_page()
 
 
 if __name__ == "__main__":
