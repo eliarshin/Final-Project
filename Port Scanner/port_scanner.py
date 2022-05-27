@@ -36,6 +36,7 @@ class port_scanner:
     #Init of our struct
     def __init__(ps):
         ps.target = "" # The host we scan
+        ps.target_url = ""
         ps.open_ports = [] # collecting open ports
         ps.input_ports =[] #input from user
         ps.ports_vulnerability = {} # collecting vulnerability information
@@ -248,26 +249,45 @@ class port_scanner:
     def run(ps):
         if(ps.state == '1'):
             threadpool(ps.port_scan, ps.input_ports, len(ps.input_ports))
+            ps.scan_flag_complete = 1
             ps.display_results()
         if(ps.state == '2'):
             threadpool(ps.port_scan, ps.ports_vulnerability.keys(), len(ps.ports_vulnerability.keys()))
+            ps.scan_flag_complete = 1
             ps.display_results()
+            ps.execute_tests()
+            ps.final_results()
         if(ps.state == '3'):
             threadpool(ps.port_scan, ps.input_ports, len(ps.input_ports))
+            ps.scan_flag_complete = 1
             ps.read_from_db()
             ps.display_results()
-        ps.scan_flag_complete = 1
+        
 
     def is_scan_started(ps):
         if ps.scan_flag_start == 1:
             ps.scan_started = 1
+            ps.report_message.append("Scan is started - target is public")
+        #print("scan started = @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",ps.scan_started)
+
     def is_scan_detected(ps):
         if ps.scan_flag_complete == 1:
             ps.scan_completed = 1
+            ps.report_message.append("Scan is undetected - scan is done")
+        print("scan completed = @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",ps.scan_completed)
+
     def is_open_ports_found(ps):
         threshold = 4
         if len(ps.open_ports) > threshold:
             ps.counter_open_ports = len(ps.open_ports)
+        print("count ports = @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",ps.counter_open_ports)
+    
+    def execute_tests(ps):
+        ps.is_scan_started()
+        ps.is_scan_detected()
+        ps.is_open_ports_found()
+        ps.is_ports_vulnerable()
+        ps.security_score()
 
     def is_ports_vulnerable(ps):
         vulnerable_ports_bulk = ["20","21","22","139","137","445","53","443","80","8080","8443","23","25","69"]
@@ -277,7 +297,42 @@ class port_scanner:
             if (port) in str(ps.open_ports):
                 ps.common_unsecure_ports.append(port)
                 counter = counter+1
-            
+        if counter > 0 :
+            ps.vulnerable_ports_found = 1
+        print("vulnerable ports = @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",ps.vulnerable_ports_found)
+    
+    def security_score(ps):
+        threshold = 4
+        if ps.scan_started == 1:
+            ps.final_score = ps.final_score + 3
+        if ps.scan_completed == 1:
+            ps.final_score = ps.final_score + 4
+        if ps.counter_open_ports >threshold:
+            ps.final_score = ps.final_score + 5
+        if ps.vulnerable_ports_found == 1:
+            ps.final_score = ps.final_score + (len(ps.common_unsecure_ports) * 2)
+    
+    def final_results(ps):
+        test_cases = ["SCANNABLE TARGET","UNDETECTED PORT SCAN","FOUND OPEN PORTS ABOVE TRESHOLD", "FOUND VULNERABLE PORTS"]
+        color_type = ""
+        risk_type = ""
+        counter = 0
+
+        if ps.final_score == 0:
+            color_score = "green"
+            risk_type = "Low"
+        elif ps.final_score > 0 and ps.final_score < 6:
+            color_score = "yellow"
+            risk_type = "Medium"
+        else:
+            color_score = "red"
+            risk_type = "High"
+        art = text2art("Results",font='small',chr_ignore=True)
+        print(art)
+        console.print(f"[+] Your final secuirty score is:[{color_score}]{ps.final_score}[/{color_score}] Risk:[{color_score}]{risk_type}[/{color_score}]")
+        print()
+        console.print(f"Target is : {ps.target}")
+        console.print(f"Target IP is : {ps.url_to_ip}")
 
         
 
