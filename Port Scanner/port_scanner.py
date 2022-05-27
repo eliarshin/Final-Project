@@ -37,6 +37,7 @@ class port_scanner:
     def __init__(ps):
         ps.target = "" # The host we scan
         ps.target_url = ""
+        ps.target_host = ""
         ps.open_ports = [] # collecting open ports
         ps.input_ports =[] #input from user
         ps.ports_vulnerability = {} # collecting vulnerability information
@@ -80,7 +81,7 @@ class port_scanner:
         #ps.export.append(ports,desc)
         df = pd.DataFrame(columns=['port', 'description'],data=zip_ports_desc)
         
-        print(df)
+        #print(df)
         df.to_csv('results.csv')
         
 
@@ -197,7 +198,7 @@ class port_scanner:
         try:
             ip_addr = socket.gethostbyname(target)
             check = socket.gethostbyaddr(ip_addr)
-            print(check[0])
+            #print("CHECK IS @@@@@@@@@@@@@@@@@@@@@@@@",check[0])
         except socket.gaierror as e:
             console.print(f"{e}. Exiting.", style="bold red")
             sys.exit()
@@ -213,6 +214,7 @@ class port_scanner:
 
         if ps.state == '1':
             target = console.input("[dim cyan]Enter target URL or IP address: ")
+            ps.target_url = target
             ps.target = ps.url_to_ip(target)
             ps.user_range_ports(2,65535)
             ps.shuffle_ports()
@@ -221,11 +223,15 @@ class port_scanner:
         if ps.state == '2':
             ps.read_from_json()
             target = console.input("[dim cyan]Enter target URL or IP address: ")
+            ps.target_url = target
             ps.target = ps.url_to_ip(target)
             ps.shuffle_ports()
             ps.run()
+            #ps.display_results()
+            ps.execute_tests()
+            ps.final_results()
             ps.export_results()
-            print(f"Recived extra data :{ps.recived_data}")
+            #print(f"Recived extra data :{ps.recived_data}")
             ps.is_ports_vulnerable()
 
         if ps.state == '3':
@@ -254,9 +260,6 @@ class port_scanner:
         if(ps.state == '2'):
             threadpool(ps.port_scan, ps.ports_vulnerability.keys(), len(ps.ports_vulnerability.keys()))
             ps.scan_flag_complete = 1
-            ps.display_results()
-            ps.execute_tests()
-            ps.final_results()
         if(ps.state == '3'):
             threadpool(ps.port_scan, ps.input_ports, len(ps.input_ports))
             ps.scan_flag_complete = 1
@@ -268,19 +271,23 @@ class port_scanner:
         if ps.scan_flag_start == 1:
             ps.scan_started = 1
             ps.report_message.append("Scan is started - target is public")
-        #print("scan started = @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",ps.scan_started)
+        else:
+            ps.report_message.append("Scan failed - private target")
 
     def is_scan_detected(ps):
         if ps.scan_flag_complete == 1:
             ps.scan_completed = 1
             ps.report_message.append("Scan is undetected - scan is done")
-        print("scan completed = @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",ps.scan_completed)
+        else:
+            ps.report_message.append("Undetected scan failed - target detected the scan")
 
     def is_open_ports_found(ps):
         threshold = 4
         if len(ps.open_ports) > threshold:
             ps.counter_open_ports = len(ps.open_ports)
-        print("count ports = @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",ps.counter_open_ports)
+            ps.report_message.append("Open ports above threshold found")
+        else:
+            ps.report_message.append("Failed to find open ports above the threshold")
     
     def execute_tests(ps):
         ps.is_scan_started()
@@ -299,7 +306,9 @@ class port_scanner:
                 counter = counter+1
         if counter > 0 :
             ps.vulnerable_ports_found = 1
-        print("vulnerable ports = @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",ps.vulnerable_ports_found)
+            ps.report_message.append("Vulnerable open ports found")
+        else:
+            ps.report_message.append("Failed to find vulnerable ports")
     
     def security_score(ps):
         threshold = 4
@@ -331,8 +340,31 @@ class port_scanner:
         print(art)
         console.print(f"[+] Your final secuirty score is:[{color_score}]{ps.final_score}[/{color_score}] Risk:[{color_score}]{risk_type}[/{color_score}]")
         print()
-        console.print(f"Target is : {ps.target}")
-        console.print(f"Target IP is : {ps.url_to_ip}")
+        console.print(f"Target is : {ps.target_url}")
+        console.print(f"Target IP is : {ps.target}")
+        console.print(f"Target host is: {socket.gethostbyaddr(ps.target)[0]}")
+        console.print(f"Total ports scanned :{len(ps.ports_vulnerability.keys())}")
+        console.print(f"Total open ports found :{ps.open_ports}")
+        console.print(f"Total vulnerable ports found: {ps.common_unsecure_ports}")
+        print()
+        console.print("[magenta]Test cases:[/magenta]")
+
+        console.print("Secuirty tests:", style="bold blue")
+        table = Table(show_header=True, header_style="bold green")
+        table.add_column("TEST CASE", justify="left", style="cyan", no_wrap=True)
+        table.add_column("STATUS", justify="left", style="cyan", no_wrap=True)
+        table.add_column("SUCCESS", justify="left", style="red", no_wrap=True)
+        for report,case in zip(ps.report_message,test_cases): ## need to add database with the vulnerability of the ports
+            if "failed" in report.lower():
+                success_type = "V"
+                table.add_row(str(case), str(report), f"[green]{success_type}[/green]")
+            else:
+                success_type = "X"
+                table.add_row(str(case), str(report), f"[red]{success_type}[/red]")
+        console.print(table)
+        print()
+        console.print(f"Scan Results :")
+        ps.display_results()
 
         
 
