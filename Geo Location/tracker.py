@@ -5,6 +5,7 @@ from rich.console import Console
 from rich.table import Table
 from art import *
 import pandas as pd
+import re
 '''
 Geo Location tracker is responsible to give us information about URL or
 IP address, we get the informaption from public API and represent it to the user
@@ -56,10 +57,23 @@ class tracker:
         console.print("[+]For help press - H")
         console.print("[+]For gathering information - 1")
 
-
-    def create_api_request(target):
+    def sublist3r_services(tracker): #### this one is good  
+        tracker.get_response = requests.get("https://api.sublist3r.com/search.php?domain={tracker.target}")
+        tracker.create_json = json.loads(tracker.get_response.content)
+        print(tracker.create_json5)
+    def certsh_services(target):
+        tracker.get_response = requests.get("https://crt.sh/?q=%25.{tracker.target}")
+    def threat_crowd_services(target):
+        tracker.get_response = requests.get('https://www.threatcrowd.org/searchApi/v2/domain/report/?domain={tracker.target}')
+        #tracker.create_json = json.loads(tracker.get_response.content)
+        #out_file = open("info.json" , 'w')
+        #json.dump(tracker.create_json, out_file,indent = 6)
+    def ip_api_services(target):
         tracker.target = tracker.api + tracker.target
-    
+    def netcraft_services(tracker):
+        tracker.get_response = requests.get('https://searchdns.netcraft.com/?restriction=site+ends+with&host={tracker.target}')
+    def virustotal_services(tracker):
+        tracker.get_response = requests.get("https://www.virustotal.com/ui/domains/{tracker.target}/subdomains")
     def parse_json(target):
         tracker.get_response = requests.get(tracker.target)
         tracker.create_json = json.loads(tracker.get_response.content)
@@ -73,9 +87,30 @@ class tracker:
         tracker.state = input()
         if tracker.state == '1':
             tracker.target = input("Enter target")
-            tracker.create_api_request(tracker)
+            tracker.ip_api_services(tracker)
             tracker.parse_json(tracker)
             print(tracker.create_json)
+        if tracker.state == '2':
+            tracker.target = input("Enter target")
+            tracker.netcraft_services(tracker)
+            print(tracker.get_response.text)
+        if tracker.state == '3':
+            tracker.target = input("Enter target")
+            tracker.virustotal_services(tracker)
+            print(tracker.get_response.text)
+        if tracker.state == '4':
+            tracker.target = input("Enter target")
+            tracker.threat_crowd_services(tracker)
+            print(tracker.get_response.text)
+        if tracker.state =='5':
+            tracker.target = input("enter target")
+            tracker.sublist3r_services(tracker)
+            print(tracker.get_response)
+
+
+
+
+
             #tracker.json_to_csv(tracker)
 
 if __name__ == "__main__":
